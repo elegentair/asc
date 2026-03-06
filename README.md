@@ -19,7 +19,7 @@ Menubar widgets
 Wrapper abstractions to read and write from files easily  
 Vertical scrollbars  
 
-*Current Features*  
+*Current Features:*  
 Window Drawing  
 Text input to window (not yet application accessible)  
 Window Colors (background and text)  
