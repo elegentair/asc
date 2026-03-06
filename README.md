@@ -17,4 +17,10 @@ List and table widgets
 Make text input windows application readable  
 Menubar widgets  
 Wrapper abstractions to read and write from files easily  
-Vertical scrollbars
+Vertical scrollbars  
+
+*Current Features*  
+Window Drawing  
+Text input to window (not yet application accessible)  
+Window Colors (background and text)  
+Optional Simple Window Borders  
