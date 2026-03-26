@@ -24,3 +24,5 @@ Window Drawing
 Text input to window (not yet application accessible)  
 Window Colors (background and text)  
 Optional Simple Window Borders  
+
+*Windows Support is not currently planned, as this library uses termios to manipulate terminal properties*
