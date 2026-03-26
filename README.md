@@ -25,4 +25,4 @@ Text input to window (not yet application accessible)
 Window Colors (background and text)  
 Optional Simple Window Borders  
 
-*Windows Support is not currently planned, as this library uses termios to manipulate terminal properties*
+*Windows Support is not currently planned, as this library uses termios to manipulate terminal properties. Such support could and may be easily added in the future by editing the screen class*     
