@@ -172,8 +172,8 @@ class window:
                 self.str_text += "_"
                 self.write(self.str_text, startline, startcol, endline, endcol, color, bg, wrapping)
                 self.draw_win()
-    
-win = window("test", lines=24, cols=80, bg_color="red", borders=True)
+# to maintain a similar aspect ratio, add 7 columns for every two rows added, starting at 80x22    
+win = window("test", lines=22, cols=80, bg_color="blue", borders=True)
 #print(scn.line_num)
 #win.write("This is mr sandman!!!! I love my country because it is the best!", line=3, col=40, endcol=50)
 win.draw_win()
