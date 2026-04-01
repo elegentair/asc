@@ -9,9 +9,13 @@ import asc_screen
 #Makes the main screen object that apps will interact with
 scn = asc_screen.screen()
 class window:
-    def __init__(self, title="Window", lines=24, cols=80, bg=" ", bg_color = "base_bg", borders=False):
+    def __init__(self, title="Window", lines=scn.line_num, cols=scn.col_num, bg=" ", bg_color = "base_bg", borders=False):
+        self.firstdraw = True
         self.title = title
         self.borders = borders
+        self.bgchoice = bg
+        self.arc_lines = lines
+        self.arc_cols = cols
         #This is a dictionary that will hold all data about each ui widget in the window
         self.ui_dict = {}
         #This is a number that is used to assign id nums to ui elements
@@ -39,7 +43,7 @@ class window:
             self.need_shrink_cols = False
 
         #The background of the window is really space chars, and this colors them to the chosen bg color.
-        self.bg_char = scn.color_background(" ", bg_color)
+        self.bg_char = scn.color_background(self.bgchoice, bg_color)
         
         #This makes the nested dictionaries for the lines and cols of the window.
         for i in range(1, self.sizelines + 1):
@@ -51,21 +55,20 @@ class window:
         self.str_text = ""
         #This is a state used to determine if the currently focused ui element needs to be unfocused bc esc has been pressed
         self.need_unfocus_current = False
-        if self.borders:
-            lns = self.sizelines + 2
-            colns = self.sizecols + 2
-            aspect_gcd = math.gcd(lns, colns)
-            self.aspect_ratio_lines = (lns / aspect_gcd)
-            self.aspect_ratio_cols = (colns / aspect_gcd)
-        else:
-            aspect_gcd = math.gcd(self.sizecols, self.sizelines)
-            self.aspect_ratio_lines = (self.sizelines / aspect_gcd)
-            self.aspect_ratio_cols = (self.sizecols / aspect_gcd)
+    
+    def resize_win(self):
+        # if self.arc_lines != (scn.line_num + 1) or self.arc_cols != scn.col_num:
+        scn.clear()
+        self.__init__(self.title, scn.line_num, scn.col_num, self.bgchoice, self.bgcolor, self.borders)
 
-            
     def draw_win(self):
+        scn.update_res()
+        if scn.check_resize(self.arc_lines, self.arc_cols):
+            self.resize_win()
         #Here, the middle line and column of the window and the screen is calculated.
         #It is used for alignment of the window with the screen
+        #This middle calculation and stuff was made when there were going to be multriple window obhjects on a screen
+        #NOTE: Rewrite this to just use the dimensions made with the windowchars dictinary to transpose it onto the screen.
         scn_lines_mid = ((scn.line_num - 1) / 2) + 1
         scn_cols_mid = ((scn.col_num - 1) / 2) + 1
         win_lines_mid = ((self.sizelines - 1) / 2) + 1
@@ -97,6 +100,8 @@ class window:
                 scn.lines[i][(cols_end + 1)] = scn.bordercol
         #This updates the screen
         scn.newdraw()
+        if self.firstdraw:
+            self.firstdraw = False
     #This method allows text to be placed freely on the screen.
     #Line is the line the text will be put on, col is the column it will start on.
     #text is the actual text to be written.
@@ -173,7 +178,7 @@ class window:
                 self.write(self.str_text, startline, startcol, endline, endcol, color, bg, wrapping)
                 self.draw_win()
 # to maintain a similar aspect ratio, add 7 columns for every two rows added, starting at 80x22    
-win = window("test", lines=22, cols=80, bg_color="blue", borders=True)
+win = window("test", bg_color="blue", borders=True)
 #print(scn.line_num)
 #win.write("This is mr sandman!!!! I love my country because it is the best!", line=3, col=40, endcol=50)
 win.draw_win()

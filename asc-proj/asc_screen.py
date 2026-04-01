@@ -78,17 +78,19 @@ class screen:
         for i in self.lines:
             for c in range (1, self.col_num + 1):
                 self.lines[i][c] = initchar
-
-    def draw(self):
-        # Clear Screen
+    def clear(self):
         print("\033[H\033[2J")
-        # This for loop prints each column value in each line dict.
-        for i in self.lines:
-            for r in self.lines[i]:
-                print(self.lines[i][r], end="")
-            print("\n", end="")
-        if i >= self.line_num:
-            return
+
+    #def draw(self):
+    #    # Clear Screen
+    #    print("\033[H\033[2J")
+    #    # This for loop prints each column value in each line dict.
+    #    for i in self.lines:
+    #        for r in self.lines[i]:
+    #            print(self.lines[i][r], end="")
+    #        print("\n", end="")
+    #    if i >= self.line_num:
+    #        return
     def newdraw(self):
         #Escape code moves cursor to top left, so terminal draws on top of image instead of scrolling down wit a new one.
         char_str = "\033[H\033[?25l"
@@ -138,11 +140,18 @@ class screen:
         #This serves as a good example of how to manually edit the screen as well
         self.lines[line][col] = color_char
 
+    def check_resize(self, li, co):
+        term_size = shutil.get_terminal_size()
+        if li == term_size.lines - 1 and co == term_size.columns:
+            return False
+        else:
+            return True
+
     def update_res(self):
         # Get the terminal size and assign it to column and line number vars
         term_size = shutil.get_terminal_size()
         self.col_num = term_size.columns
-        self.line_num = (term_size.lines) - 1
+        self.line_num = term_size.lines - 1
 
 #This method colors any text needed. It is called by asc.
 #It is in this file bc escape chars may not exist on other platforms
