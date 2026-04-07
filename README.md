@@ -20,10 +20,10 @@ Vertical scrollbars
 
 *Current Features:*  
 Window Drawing  
-Text input to window (not yet application accessible)  
+Text input to window  
 Window Colors (background and text)  
-Optional Simple Window Borders (Depricated)
-Window resizing (automatic) to terminal size
-Make text input windows application readable
+Optional Simple Window Borders (Depricated)  
+Window resizing (automatic) to terminal size  
+Make text input windows application readable  
 
 *Windows Support is not currently planned, as this library uses termios to manipulate terminal properties. Such support could and may be easily added in the future by editing the screen class*     
