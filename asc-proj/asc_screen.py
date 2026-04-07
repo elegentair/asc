@@ -142,7 +142,7 @@ class screen:
 
     def check_resize(self, li, co):
         term_size = shutil.get_terminal_size()
-        if li == term_size.lines - 1 and co == term_size.columns:
+        if li == term_size.lines and co == term_size.columns:
             return False
         else:
             return True
@@ -151,7 +151,7 @@ class screen:
         # Get the terminal size and assign it to column and line number vars
         term_size = shutil.get_terminal_size()
         self.col_num = term_size.columns
-        self.line_num = term_size.lines - 1
+        self.line_num = term_size.lines
 
 #This method colors any text needed. It is called by asc.
 #It is in this file bc escape chars may not exist on other platforms

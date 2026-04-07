@@ -2,22 +2,25 @@ import time
 import math
 #Imports the screen class. The screen class is the only part that will vary across platforms
 import asc_screen
-
+resize = 0
 #IDEA FOR DYNAMIC RESIZING:
 #The curent screen lines number would be divided by the the base window size (usually 80 cols). This num would be called the line multiplier. If the line multiplier is less than 1, the program would tell the user that their terminal is too small. The same thing would be done for columns. Then, on resize/window scaliong, every ui element would be resized by that line & col multiplier. The only concern is that if its a decimal that could cause some things to go wrong and it may not be even. Aspect ratio would need to be presevred, so if the screen is not the windows base aspect ratio, letterboxing would be used (i.e just making the screen bg around the window.)
 
 #Makes the main screen object that apps will interact with
 scn = asc_screen.screen()
 class window:
-    def __init__(self, title="Window", lines=scn.line_num, cols=scn.col_num, bg=" ", bg_color = "base_bg", borders=False):
+    def __init__(self, title="Window", lines=scn.line_num, cols=scn.col_num, bg=" ", bg_color = "base_bg", borders=False, uidict={}, strtxt = ""):
         self.firstdraw = True
         self.title = title
-        self.borders = borders
+        self.resize = 0
+        self.endmsg = ""
+        #BORDERS ARE DEPRICATED FOR NOW
+        self.borders = False
         self.bgchoice = bg
         self.arc_lines = lines
         self.arc_cols = cols
         #This is a dictionary that will hold all data about each ui widget in the window
-        self.ui_dict = {}
+        self.ui_dict = uidict
         #This is a number that is used to assign id nums to ui elements
         self.curr_id_num = 1
         #Here, lines and cols sizes are subtracted by 2 because borders take up two cols, two lines
@@ -46,63 +49,63 @@ class window:
         self.bg_char = scn.color_background(self.bgchoice, bg_color)
         
         #This makes the nested dictionaries for the lines and cols of the window.
-        for i in range(1, self.sizelines + 1):
+        for i in range(1, self.arc_lines + 1):
             self.window_chars[i] = {}
         for i in self.window_chars:
-            for c in range(1, self.sizecols + 1):
+            for c in range(1, self.arc_cols + 1):
                 self.window_chars[i][c] = self.bg_char
         #This is a class text var, used in the input write method.
-        self.str_text = ""
+        self.str_text = strtxt
         #This is a state used to determine if the currently focused ui element needs to be unfocused bc esc has been pressed
         self.need_unfocus_current = False
     
     def resize_win(self):
-        # if self.arc_lines != (scn.line_num + 1) or self.arc_cols != scn.col_num:
+        # This re-initializes the ui every time the user resizes the app. This is needed so that the app doesnt break when resized
         scn.clear()
-        self.__init__(self.title, scn.line_num, scn.col_num, self.bgchoice, self.bgcolor, self.borders)
+        self.resize += 1
+        scn.__init__()
+        self.__init__(self.title, scn.line_num, scn.col_num, self.bgchoice, self.bgcolor, self.borders, self.ui_dict, self.str_text)
 
     def draw_win(self):
         scn.update_res()
         if scn.check_resize(self.arc_lines, self.arc_cols):
             self.resize_win()
-        #Here, the middle line and column of the window and the screen is calculated.
-        #It is used for alignment of the window with the screen
-        #This middle calculation and stuff was made when there were going to be multriple window obhjects on a screen
-        #NOTE: Rewrite this to just use the dimensions made with the windowchars dictinary to transpose it onto the screen.
-        scn_lines_mid = ((scn.line_num - 1) / 2) + 1
-        scn_cols_mid = ((scn.col_num - 1) / 2) + 1
-        win_lines_mid = ((self.sizelines - 1) / 2) + 1
-        win_cols_mid = ((self.sizecols - 1) / 2) + 1
-        #Here, the starting and ending line of the screen that the window will be drawn on is calculated.
-        lines_start = int(scn_lines_mid - ((self.sizelines - 1) / 2))
-        lines_end = int(scn_lines_mid + ((self.sizelines - 1) / 2))
-        #The same is done for columns:
-        cols_start = int(scn_cols_mid - ((self.sizecols - 1) / 2))
-        cols_end = int(scn_cols_mid + ((self.sizecols - 1 ) / 2))
         #This is another counter var to keep track of what lines have been drawn on
         window_lines_index = 1
+        if self.borders:
+            lines_start = 2
+            cols_start = 2
+            lines_end = self.arc_lines - 1
+            cols_end = self.arc_cols - 1
+        else:
+            lines_start = 1
+            cols_start = 1
+            lines_end = self.sizelines
+            cols_end = self.sizecols
         #This is the main for loop that transposes the window onto the screen
         for i in range(lines_start, lines_end + 1):
             window_cols_index = 1
-            for c in range(cols_start, cols_end + 1):
+            for c in range(cols_start, cols_end):
+                #print(f"I: {i} C: {c}")
+                #print(f"lstart: {lines_start} lend: {lines_end}, cstart {cols_start}, cend {cols_end} i: {i}, c: {c}")
                 scn.lines[i][c] = self.window_chars[window_lines_index][window_cols_index]
                 window_cols_index += 1
             window_lines_index += 1
         #Drawing Window Borders:
         if self.borders:
             #First loop draws borders on top and bottom, second loop does sides and corners
-            for i in range(cols_start - 1, cols_end + 2):
-                scn.lines[(lines_start - 1)][i] = scn.bordercol
+            for i in range(cols_start - 1, cols_end + 1):
+                scn.lines[(lines_start)][i] = scn.bordercol
                 scn.lines[(lines_end + 1)][i] = scn.bordercol
                 
-            for i in range(lines_start, lines_end + 1):
-                scn.lines[i][(cols_start - 1)] = scn.bordercol
+            for i in range(lines_start - 1, lines_end + 1):
+                scn.lines[i][(cols_start)] = scn.bordercol
                 scn.lines[i][(cols_end + 1)] = scn.bordercol
         #This updates the screen
         scn.newdraw()
         if self.firstdraw:
             self.firstdraw = False
-    #This method allows text to be placed freely on the screen.
+    #This method allows text to be placed freely on the screen. It is NOT meant to be used independenty (NOT a ui widget). It is used by other methods.
     #Line is the line the text will be put on, col is the column it will start on.
     #text is the actual text to be written.
     #Color is the text color, the wrapping setting controls if the text is wrapping or not.
@@ -153,7 +156,8 @@ class window:
         self.ui_dict[self.curr_id_num]["type"] = "input_write"
         self.ui_dict[self.curr_id_num]["hor_size"] = ((endcol - startcol) + 1)
         self.ui_dict[self.curr_id_num]["vert_size"] = ((endline - startline) + 1)
-        self.curr_id_num += 1
+        if "txt" in self.ui_dict[self.curr_id_num]:
+            self.str_text = self.ui_dict[self.curr_id_num]
         for i in range(0, char_amount):
             bufftxt += " "
             self.write(bufftxt, startline, startcol, endline, endcol, color, bg, wrapping)
@@ -177,11 +181,18 @@ class window:
                 self.str_text += "_"
                 self.write(self.str_text, startline, startcol, endline, endcol, color, bg, wrapping)
                 self.draw_win()
+            self.ui_dict[self.curr_id_num]["txt"] = self.str_text
+        ent_str = self.str_text[:-1]
+        self.str_text = ""
+        self.curr_id_num += 1
+        return ent_str
 # to maintain a similar aspect ratio, add 7 columns for every two rows added, starting at 80x22    
-win = window("test", bg_color="blue", borders=True)
+win = window("test", bg_color="blue", borders=False)
 #print(scn.line_num)
 #win.write("This is mr sandman!!!! I love my country because it is the best!", line=3, col=40, endcol=50)
 win.draw_win()
-win.input_write(wrapping=True)
+tes = win.input_write(wrapping=True)
 #time.sleep(5)
 #print(f"Lines: {win.aspect_ratio_lines} Cols: {win.aspect_ratio_cols}")
+print(tes)
+#print(win.resize)
