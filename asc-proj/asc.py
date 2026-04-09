@@ -57,7 +57,7 @@ class window:
         self.screen.clear()
         self.resize += 1
         self.screen.__init__()
-        self.__init__(self.title, self.screen.line_num, self.screen.col_num, self.bgchoice, self.bgcolor, self.borders, self.ui_dict, self.str_text)
+        self.__init__(self.screen, self.title, self.bgchoice, self.bgcolor, self.borders, self.ui_dict, self.str_text)
 
     def draw_win(self):
         self.screen.update_res()
@@ -103,7 +103,7 @@ class window:
     #text is the actual text to be written.
     #Color is the text color, the wrapping setting controls if the text is wrapping or not.
     #The bg var is the background color of the text
-    def write(self, text, line=1, col=1, endline="max", endcol="max", color="base_text", bg="base_win_bg", wrapping=True):
+    def write(self, text, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
         #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
         if endline == "max":
             endline = self.sizelines
@@ -111,14 +111,14 @@ class window:
             endcol = self.sizecols
             
         #If the bg is left default, it will inherit the background color of the window.
-        if bg == "base_win_bg":
-            bg = self.bgcolor
+        if bg_color == "base_win_bg":
+            bg_color = self.bgcolor
         #This is a counter var to keep track of columns
-        c = col
+        c = startcol
         #This loop iterates through the text and writes each letter to the column before it.
         for i in text:
-            charec = self.screen.color_bf(i, color, bg)
-            self.window_chars[line][c] = charec
+            charec = self.screen.color_bf(i, color, bg_color)
+            self.window_chars[startline][c] = charec
             if wrapping == False:
                 if c >= endcol:
                     #FOR LATER: implement text scrolling if it doesnt wrap
@@ -127,16 +127,16 @@ class window:
                     c += 1
             #This auto pushes the text to the next line if it overtakes the first line & wrapping is on
             elif wrapping == True:
-                if line >= self.sizelines and c >= endcol:
+                if startline >= self.sizelines and c >= endcol:
                     self.need_unfocus_current = True
                 elif c >= self.sizecols or c >= endcol:
-                    line += 1
-                    c = col
+                    startline += 1
+                    c = startcol
                 else:
                     c += 1
     #This method does the same as the write method, but writes with user input
     #It captures user input until a app dev set keybinding activates
-    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg="base_win_bg", wrapping=True):
+    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
         #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
         if endline == "max":
             endline = self.sizelines
@@ -153,7 +153,7 @@ class window:
             self.str_text = self.ui_dict[self.curr_id_num]
         for i in range(0, char_amount):
             bufftxt += " "
-            self.write(bufftxt, startline, startcol, endline, endcol, color, bg, wrapping)
+            self.write(bufftxt, startline, startcol, endline, endcol, color, bg_color, wrapping)
         self.draw_win()
 
         self.need_unfocus_current = False
@@ -163,7 +163,7 @@ class window:
             if res == "^BACKSPACE":
                 self.str_text = self.str_text[:-1]
                 self.str_text += " "
-                self.write(self.str_text, startline, startcol, endline, endcol, color, bg, wrapping)
+                self.write(self.str_text, startline, startcol, endline, endcol, color, bg_color, wrapping)
                 self.str_text = self.str_text[:-1]
                 self.draw_win()
             elif res == "^ESCAPE":
@@ -172,7 +172,7 @@ class window:
                 self.str_text = self.str_text[:-1]
                 self.str_text += res
                 self.str_text += "_"
-                self.write(self.str_text, startline, startcol, endline, endcol, color, bg, wrapping)
+                self.write(self.str_text, startline, startcol, endline, endcol, color, bg_color, wrapping)
                 self.draw_win()
             self.ui_dict[self.curr_id_num]["txt"] = self.str_text
         ent_str = self.str_text[:-1]
