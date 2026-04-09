@@ -15,7 +15,6 @@ import sys
 
 # Used for input:
 import termios
-import tty
 
 # Get original terminal settings:
 og_term = termios.tcgetattr(sys.stdin.fileno())

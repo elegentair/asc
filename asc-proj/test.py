@@ -1,3 +1,6 @@
+import asc
 import asc_screen
-sc = asc_screen.screen("#")
-print(sc.color_whole("A", bgcolor="red"))
+scn = asc_screen.screen()
+win = asc.window(scn, "demo", bg_color="red")
+text_in = win.input_write()
+print(f"You wrote: {text_in}")
