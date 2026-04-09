@@ -27,3 +27,5 @@ Window resizing (automatic) to terminal size
 Make text input windows application readable  
 
 *Windows Support is not currently planned, as this library uses termios to manipulate terminal properties. Such support could and may be easily added in the future by editing the screen class*     
+
+*For documentation, see the wiki*
