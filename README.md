@@ -10,19 +10,22 @@ This project was borne out of the idea to create an entire userland of apps and 
 Currently, this project is in its infancy. As described above, its only main function is to write a window to the screen and input text to it. Below, I have listed all planned features for the toolkit:  
 
 *Planned Features:*  
-Window resizing (automatic) to terminal size, with dynamic resizing of all widgets inside the window  
+Dynamic resizing of all widgets inside the window  
 A robust input system inspired by qutebrowser, where each "clickable" ui element is given a activator key  
 Button widgets that the user can activate  
 List and table widgets  
-Make text input windows application readable  
 Menubar widgets  
 Wrapper abstractions to read and write from files easily  
 Vertical scrollbars  
 
 *Current Features:*  
 Window Drawing  
-Text input to window (not yet application accessible)  
+Text input to window  
 Window Colors (background and text)  
-Optional Simple Window Borders  
+Optional Simple Window Borders (Depricated)  
+Window resizing (automatic) to terminal size  
+Make text input windows application readable  
 
 *Windows Support is not currently planned, as this library uses termios to manipulate terminal properties. Such support could and may be easily added in the future by editing the screen class*     
+
+*For documentation, see the wiki*
