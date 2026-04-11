@@ -2,20 +2,15 @@
 
 # Used to get term len and width
 import shutil
-
 # Used for Windows support to enable escape chars for colors.
 import os
-
 # Used to cleanup terminal (turn on cursor) at exit
 import atexit
 import signal
-
 # Used for input and other functions:
 import sys
-
 # Used for input:
 import termios
-
 # Get original terminal settings:
 og_term = termios.tcgetattr(sys.stdin.fileno())
 # Check if user is using windows to enable escape chars
@@ -44,16 +39,6 @@ class screen:
         self.og_line_num = term_size.lines
         self.og_cols_num = term_size.columns
         self.bordercol = "\033[107m" + " "+ "\033[0m"
-        # if term_size.lines % 2 == 0:
-        #     self.line_num = (term_size.lines - 1)
-        # else:
-        #     self.line_num = term_size.lines
-
-        # if term_size.columns % 2 == 0:
-        #     self.col_num = (term_size.columns - 1)
-        # else:
-        #     self.col_num = term_size.columns
-
         self.line_num = term_size.lines
         self.col_num = term_size.columns
 
@@ -80,16 +65,6 @@ class screen:
     def clear(self):
         print("\033[H\033[2J")
 
-    #def draw(self):
-    #    # Clear Screen
-    #    print("\033[H\033[2J")
-    #    # This for loop prints each column value in each line dict.
-    #    for i in self.lines:
-    #        for r in self.lines[i]:
-    #            print(self.lines[i][r], end="")
-    #        print("\n", end="")
-    #    if i >= self.line_num:
-    #        return
     def newdraw(self):
         #Escape code moves cursor to top left, so terminal draws on top of image instead of scrolling down wit a new one.
         char_str = "\033[H\033[?25l"
@@ -233,6 +208,8 @@ class screen:
             char = "^RIGHT_ARROW"
         elif inp == "\x1b[D":
             char = "^LEFT_ARROW"
+        elif inp == "\n":
+            char = "^ENTER"
         else:
             char = inp
         return char

@@ -1,5 +1,6 @@
 class window:
-    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", borders=False, uidict={}, strtxt = "", app_row=9, appcol=16):
+    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = ""):
+        import math
         self.firstdraw = True
         self.screen = screen_obj
         lines = self.screen.line_num
@@ -14,6 +15,28 @@ class window:
         self.arc_cols = cols
         #This is a dictionary that will hold all data about each ui widget in the window
         self.ui_dict = uidict
+        #if "leftmost_avail_col" not in self.ui_dict:
+        #    #This is the left-most empty column availible
+        #    self.ui_dict["leftmost_avil_col"] = 0
+        #    #This is the same for the right
+        #    self.ui_dict["rightmost_avail_col"] = self.arc_cols
+        #if "highest_avail_line" not in self.ui_dict:
+        #    #This is the highest empty line availible
+        #    self.ui_dict["highest_avail_line"] = self.arc_lines
+        #    #This is the same from the bottom
+        #    self.ui_dict["avail_bot_lines"] = self.arc_lines`
+        #Makes a grid of widget positions
+        #This does not check if it is already been done because it NEEDS to be recalculated on resize
+        if "ui_grid" not in self.ui_dict:
+            self.ui_dict["ui_grid"] = {}
+
+        self.grid_mult = grid_mult
+
+        for i in range(1, ((grid_mult * 5) + 1)):
+            self.ui_dict["ui_grid"][i] = {}
+            for c in range(1, ((grid_mult * 5) + 1)):
+                self.ui_dict["ui_grid"][i][c] = 0
+
         #This is a number that is used to assign id nums to ui elements
         self.curr_id_num = 1
         #Here, lines and cols sizes are subtracted by 2 because borders take up two cols, two lines
@@ -57,7 +80,7 @@ class window:
         self.screen.clear()
         self.resize += 1
         self.screen.__init__()
-        self.__init__(self.screen, self.title, self.bgchoice, self.bgcolor, self.borders, self.ui_dict, self.str_text)
+        self.__init__(self.screen, self.title, self.bgchoice, self.bgcolor, self.grid_mult, self.borders, self.ui_dict, self.str_text)
 
     def draw_win(self):
         self.screen.update_res()
@@ -134,9 +157,34 @@ class window:
                     c = startcol
                 else:
                     c += 1
+    def widget_place(self, align_vert, align_hor, colsize, linsize):
+        if align_vert == "center" and align_hor == "center":
+            #get middle column of widget:
+            #Size must be odd to be in perfect middle
+            middle_col = int(align_hor - ((align_hor - 1) / 2))
+            
+            
+
     #This method does the same as the write method, but writes with user input
     #It captures user input until a app dev set keybinding activates
-    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
+    def add_inputbox(self, align_hor="center", align_vert="center"):
+        colsize = (hor_perc / 100) * self.arc_cols
+        line_size = (vert_perc / 100) * self.arc_lines
+        total_hor_pad = self.arc_cols - colsize
+        total_vert_pad = self.arc_lines - line_size
+        if align_hor == "center":
+            hor_pad = total_hor_pad / 2
+            vert_pad = total_vert_pad / 2
+            #startcol = self.ui_dict["
+            startcol = self.ui_dict[""]
+        elif align_hor == "left":
+            startcol = 1
+        #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
+        if endline == "max":
+            endline = self.sizelines
+        if endcol == "max":
+            endcol = self.sizecols
+    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", align_hor="center", align_vert="center", color="base_text", bg_color="base_win_bg", wrapping=True):
         #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
         if endline == "max":
             endline = self.sizelines
@@ -179,5 +227,9 @@ class window:
         self.str_text = ""
         self.curr_id_num += 1
         return ent_str
-    def add_button(self, min_size_vert, min_size_hor, mid_row, mid_col):
-        print("BUTTON")
+    def add_uispace(self, vert_perc, hor_perc):
+        self.ui_dict[self.curr_id_num] = {}
+        self.ui_dict[self.curr_id_num]["type"] = "ui_space"
+        self.ui_dict[self.curr_id_num]["vert_size"] = vert_perc
+        self.ui_dict[self.curr_id_num]["hor_size"] = hor_perc
+        self.curr_id_num += 1
