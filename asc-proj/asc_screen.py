@@ -53,6 +53,13 @@ class screen:
         term_to_modify[6][termios.VTIME] = 1
         termios.tcsetattr(ter, termios.TCSADRAIN, term_to_modify)
         
+        #self.slist = []
+        #for i in range(1, self.line_num + 1):
+        #    self.lines.append([])
+        #for i in self.slist:
+        #    for c in range(1, self.col_num + 1):
+        #        self.lines[i]
+
         # Make the main dictionary holding screen info (more below)
         self.lines = {}
         # Make a dictionary inside the main dictionary for each line. 12 lines, bc standard is 24. 
@@ -67,15 +74,22 @@ class screen:
 
     def newdraw(self):
         #Escape code moves cursor to top left, so terminal draws on top of image instead of scrolling down wit a new one.
-        char_str = "\033[H\033[?25l"
+        charl = []
+        charl.append("\033[H\033[?25l")
+        #char_str = "\033[H\033[?25l"
         for i in self.lines:
             for r in self.lines[i]:
-                char_str += self.lines[i][r]
+                #char_str += self.lines[i][r]
+                charl.append(self.lines[i][r])
             if i < self.line_num:
-                char_str += "\n"
+                #char_str += "\n"
+                charl.append("\n")
         #char_str += "\033[?25h"
-        sys.stdout.write(char_str)
+        outp = "".join(charl)
+        #sys.stdout.write(char_str)
+        sys.stdout.write(outp)
         sys.stdout.flush()
+
     # Takes the line and col num to be edited, and the charecter to replace it with, with color.
     # Color is taken manually in asc instead of with escape codes.
     # This is so color works on all systems, regardless of old (and janky) escape code usage
