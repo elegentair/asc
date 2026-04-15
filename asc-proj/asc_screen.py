@@ -13,9 +13,6 @@ import sys
 import termios
 # Get original terminal settings:
 og_term = termios.tcgetattr(sys.stdin.fileno())
-# Check if user is using windows to enable escape chars
-if os.name == "nt":
-    os.system('')
 
 #This function will run on quit of program
 def term_cleanup():
@@ -53,22 +50,22 @@ class screen:
         term_to_modify[6][termios.VTIME] = 1
         termios.tcsetattr(ter, termios.TCSADRAIN, term_to_modify)
         
-        #self.slist = []
-        #for i in range(1, self.line_num + 1):
-        #    self.lines.append([])
-        #for i in self.slist:
-        #    for c in range(1, self.col_num + 1):
-        #        self.lines[i]
+        self.slist = []
+        for i in range(0, self.line_num):
+            self.slist.append([])
+        for i in range(0, self.line_num):
+            for c in range(0, self.col_num):
+                self.slist[i].append(initchar)
 
         # Make the main dictionary holding screen info (more below)
-        self.lines = {}
-        # Make a dictionary inside the main dictionary for each line. 12 lines, bc standard is 24. 
-        for i in range(1, self.line_num + 1):
-            self.lines[i] = {}
-        # Makes dictonaries for each column of each line. 40 columns, bc standard is 80. 
-        for i in self.lines:
-            for c in range (1, self.col_num + 1):
-                self.lines[i][c] = initchar
+        #self.lines = {}
+        ## Make a dictionary inside the main dictionary for each line. 12 lines, bc standard is 24. 
+        #for i in range(1, self.line_num + 1):
+        #    self.lines[i] = {}
+        ## Makes dictonaries for each column of each line. 40 columns, bc standard is 80. 
+        #for i in self.lines:
+        #    for c in range (1, self.col_num + 1):
+        #        self.lines[i][c] = initchar
     def clear(self):
         print("\033[H\033[2J")
 
@@ -77,13 +74,18 @@ class screen:
         charl = []
         charl.append("\033[H\033[?25l")
         #char_str = "\033[H\033[?25l"
-        for i in self.lines:
-            for r in self.lines[i]:
-                #char_str += self.lines[i][r]
-                charl.append(self.lines[i][r])
-            if i < self.line_num:
-                #char_str += "\n"
+        for i in range(0, self.line_num):
+            for r in range(0, self.col_num):
+                charl.append(self.slist[i][r])
+            if (i + 1) < self.line_num:
                 charl.append("\n")
+        #for i in self.lines:
+        #    for r in self.lines[i]:
+        #        #char_str += self.lines[i][r]
+        #        charl.append(self.lines[i][r])
+        #    if i < self.line_num:
+        #        #char_str += "\n"
+        #        charl.append("\n")
         #char_str += "\033[?25h"
         outp = "".join(charl)
         #sys.stdout.write(char_str)

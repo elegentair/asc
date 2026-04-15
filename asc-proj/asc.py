@@ -1,6 +1,6 @@
+import time
 class window:
     def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = ""):
-        import math
         self.firstdraw = True
         self.screen = screen_obj
         lines = self.screen.line_num
@@ -64,12 +64,20 @@ class window:
         #The background of the window is really space chars, and this colors them to the chosen bg color.
         self.bg_char = self.screen.color_background(self.bgchoice, bg_color)
         
+        #THIS IS FOR THE SWITCH TO LISTS FROM DICTIONARIES:
+        self.winlist = [[self.bg_char] * self.arc_cols for _ in range(self.arc_lines)]
+        #for i in range(0, self.arc_lines):
+        #    self.winlist.append([])
+        #for i in range(0, self.arc_lines):
+        #    for c in range(0, self.arc_cols):
+        #        self.winlist[i].append(self.bg_char)
+
         #This makes the nested dictionaries for the lines and cols of the window.
-        for i in range(1, self.arc_lines + 1):
-            self.window_chars[i] = {}
-        for i in self.window_chars:
-            for c in range(1, self.arc_cols + 1):
-                self.window_chars[i][c] = self.bg_char
+        #for i in range(1, self.arc_lines + 1):
+        #    self.window_chars[i] = {}
+        #for i in self.window_chars:
+        #    for c in range(1, self.arc_cols + 1):
+        #        self.window_chars[i][c] = self.bg_char
         #This is a class text var, used in the input write method.
         self.str_text = strtxt
         #This is a state used to determine if the currently focused ui element needs to be unfocused bc esc has been pressed
@@ -99,24 +107,33 @@ class window:
             lines_end = self.sizelines
             cols_end = self.sizecols
         #This is the main for loop that transposes the window onto the screen
-        for i in range(lines_start, lines_end + 1):
+        
+        for i in range(lines_start - 1, lines_end):
             window_cols_index = 1
-            for c in range(cols_start, cols_end):
-                #print(f"I: {i} C: {c}")
-                #print(f"lstart: {lines_start} lend: {lines_end}, cstart {cols_start}, cend {cols_end} i: {i}, c: {c}")
-                self.screen.lines[i][c] = self.window_chars[window_lines_index][window_cols_index]
+            for c in range(cols_start - 1, cols_end):
+                self.screen.slist[i][c] = self.winlist[window_lines_index - 1][window_cols_index - 1]
                 window_cols_index += 1
             window_lines_index += 1
-        #Drawing Window Borders:
-        if self.borders:
-            #First loop draws borders on top and bottom, second loop does sides and corners
-            for i in range(cols_start - 1, cols_end + 1):
-                self.screen.lines[(lines_start)][i] = self.screen.bordercol
-                self.screen.lines[(lines_end + 1)][i] = self.screen.bordercol
-                
-            for i in range(lines_start - 1, lines_end + 1):
-                self.screen.lines[i][(cols_start)] = self.screen.bordercol
-                self.screen.lines[i][(cols_end + 1)] = self.screen.bordercol
+
+        #for i in range(lines_start, lines_end + 1):
+        #    window_cols_index = 1
+        #    for c in range(cols_start, cols_end):
+        #        #print(f"I: {i} C: {c}")
+        #        #print(f"lstart: {lines_start} lend: {lines_end}, cstart {cols_start}, cend {cols_end} i: {i}, c: {c}")
+        #        self.screen.lines[i][c] = self.window_chars[window_lines_index][window_cols_index]
+        #        window_cols_index += 1
+        #    window_lines_index += 1
+
+        #Drawing Window Borders (DEPRICATED!!!!!!):
+        #if self.borders:
+        #    #First loop draws borders on top and bottom, second loop does sides and corners
+        #    for i in range(cols_start - 1, cols_end + 1):
+        #        self.screen.lines[(lines_start)][i] = self.screen.bordercol
+        #        self.screen.lines[(lines_end + 1)][i] = self.screen.bordercol
+        #        
+        #    for i in range(lines_start - 1, lines_end + 1):
+        #        self.screen.lines[i][(cols_start)] = self.screen.bordercol
+        #        self.screen.lines[i][(cols_end + 1)] = self.screen.bordercol
         #This updates the screen
         self.screen.newdraw()
         if self.firstdraw:
@@ -141,7 +158,8 @@ class window:
         #This loop iterates through the text and writes each letter to the column before it.
         for i in text:
             charec = self.screen.color_bf(i, color, bg_color)
-            self.window_chars[startline][c] = charec
+            #self.window_chars[startline][c] = charec
+            self.winlist[startline - 1][c - 1] = charec
             if wrapping == False:
                 if c >= endcol:
                     #FOR LATER: implement text scrolling if it doesnt wrap
@@ -190,8 +208,8 @@ class window:
             endline = self.sizelines
         if endcol == "max":
             endcol = self.sizecols
-        char_amount = ((endline - startline) + 1) * ((endcol - startcol) + 1)
-        bufftxt = ""
+        #char_amount = ((endline - startline) + 1) * ((endcol - startcol) + 1)
+        #bufftxt = ""
         #Assign the dict entry for this widget
         self.ui_dict[self.curr_id_num] = {}
         self.ui_dict[self.curr_id_num]["type"] = "input_write"
@@ -199,10 +217,10 @@ class window:
         self.ui_dict[self.curr_id_num]["vert_size"] = ((endline - startline) + 1)
         if "txt" in self.ui_dict[self.curr_id_num]:
             self.str_text = self.ui_dict[self.curr_id_num]
-        for i in range(0, char_amount):
-            bufftxt += " "
-            self.write(bufftxt, startline, startcol, endline, endcol, color, bg_color, wrapping)
-        self.draw_win()
+        #for i in range(0, char_amount):
+        #    bufftxt += " "
+        #    self.write(bufftxt, startline, startcol, endline, endcol, color, bg_color, wrapping)
+        #self.draw_win()
 
         self.need_unfocus_current = False
         
