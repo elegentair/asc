@@ -11,6 +11,8 @@ import signal
 import sys
 # Used for input:
 import termios
+
+import copy
 # Get original terminal settings:
 og_term = termios.tcgetattr(sys.stdin.fileno())
 
@@ -18,6 +20,7 @@ og_term = termios.tcgetattr(sys.stdin.fileno())
 def term_cleanup():
     termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, og_term)
     sys.stdout.write("\033[?25h")
+    sys.stdout.write("\033[H\033[2J")
     sys.stdout.flush()
 
 #These commands set the function above to run at exit
@@ -50,6 +53,7 @@ class screen:
         term_to_modify[6][termios.VTIME] = 1
         termios.tcsetattr(ter, termios.TCSADRAIN, term_to_modify)
         
+        self.slist_old = []
         self.slist = []
         for i in range(0, self.line_num):
             self.slist.append([])
@@ -70,7 +74,22 @@ class screen:
         print("\033[H\033[2J")
 
     def newdraw(self):
-        #Escape code moves cursor to top left, so terminal draws on top of image instead of scrolling down wit a new one.
+        #moves cursor to home position and hides it
+        sys.stdout.write("\033[H\033[?25l")
+
+        for i in range(0, self.line_num):
+            if self.slist_old[i] != self.slist[i]:
+                for r in range(0, self.col_num):
+                    if self.slist_old[i][r] != self.slist[i][r]:
+                        #Moves cursor to place where text is different
+                        sys.stdout.write(f"\x1b[{i + 1};{r + 1}H")
+                        sys.stdout.write(self.slist[i][r])
+        sys.stdout.write("\x1b[H")
+        sys.stdout.flush()
+        #stores the old frame
+        self.slist_old = copy.deepcopy(self.slist)
+
+    def fulldraw(self):
         charl = []
         charl.append("\033[H\033[?25l")
         #char_str = "\033[H\033[?25l"
@@ -91,6 +110,7 @@ class screen:
         #sys.stdout.write(char_str)
         sys.stdout.write(outp)
         sys.stdout.flush()
+        self.slist_old = copy.deepcopy(self.slist)
 
     # Takes the line and col num to be edited, and the charecter to replace it with, with color.
     # Color is taken manually in asc instead of with escape codes.

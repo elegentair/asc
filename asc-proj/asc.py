@@ -135,9 +135,11 @@ class window:
         #        self.screen.lines[i][(cols_start)] = self.screen.bordercol
         #        self.screen.lines[i][(cols_end + 1)] = self.screen.bordercol
         #This updates the screen
-        self.screen.newdraw()
         if self.firstdraw:
+            self.screen.fulldraw()
             self.firstdraw = False
+        else:
+            self.screen.newdraw()
     #This method allows text to be placed freely on the screen. It is NOT meant to be used independenty (NOT a ui widget). It is used by other methods.
     #Line is the line the text will be put on, col is the column it will start on.
     #text is the actual text to be written.
