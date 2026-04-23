@@ -3,7 +3,7 @@
 # Used to get term len and width
 import shutil
 # Used for Windows support to enable escape chars for colors.
-import os
+#import os
 # Used to cleanup terminal (turn on cursor) at exit
 import atexit
 import signal
@@ -61,17 +61,9 @@ class screen:
             for c in range(0, self.col_num):
                 self.slist[i].append(initchar)
 
-        # Make the main dictionary holding screen info (more below)
-        #self.lines = {}
-        ## Make a dictionary inside the main dictionary for each line. 12 lines, bc standard is 24. 
-        #for i in range(1, self.line_num + 1):
-        #    self.lines[i] = {}
-        ## Makes dictonaries for each column of each line. 40 columns, bc standard is 80. 
-        #for i in self.lines:
-        #    for c in range (1, self.col_num + 1):
-        #        self.lines[i][c] = initchar
     def clear(self):
-        print("\033[H\033[2J")
+        #print("\033[H\033[2J")
+        print("\033[H")
 
     def newdraw(self):
         #moves cursor to home position and hides it
@@ -98,14 +90,6 @@ class screen:
                 charl.append(self.slist[i][r])
             if (i + 1) < self.line_num:
                 charl.append("\n")
-        #for i in self.lines:
-        #    for r in self.lines[i]:
-        #        #char_str += self.lines[i][r]
-        #        charl.append(self.lines[i][r])
-        #    if i < self.line_num:
-        #        #char_str += "\n"
-        #        charl.append("\n")
-        #char_str += "\033[?25h"
         outp = "".join(charl)
         #sys.stdout.write(char_str)
         sys.stdout.write(outp)
@@ -166,6 +150,7 @@ class screen:
 #This method colors any text needed. It is called by asc.
 #It is in this file bc escape chars may not exist on other platforms
     def color_text(self, charec, color):
+        color_char = ""
         if color == "red":
             color_char = "\033[31m" + str(charec) + "\033[0m"
         elif color == "green":
@@ -228,6 +213,7 @@ class screen:
         elif color == "base_text":
             color_char = bgc + str(charec) + "\033[0m"
         return color_char
+    
     def get_input(self):
         inp = sys.stdin.read(1)
         if inp == "\x1b":

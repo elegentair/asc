@@ -1,6 +1,6 @@
 import time
 class window:
-    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = ""):
+    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = "", diff_draw=True):
         self.firstdraw = True
         self.screen = screen_obj
         lines = self.screen.line_num
@@ -15,16 +15,9 @@ class window:
         self.arc_cols = cols
         #This is a dictionary that will hold all data about each ui widget in the window
         self.ui_dict = uidict
-        #if "leftmost_avail_col" not in self.ui_dict:
-        #    #This is the left-most empty column availible
-        #    self.ui_dict["leftmost_avil_col"] = 0
-        #    #This is the same for the right
-        #    self.ui_dict["rightmost_avail_col"] = self.arc_cols
-        #if "highest_avail_line" not in self.ui_dict:
-        #    #This is the highest empty line availible
-        #    self.ui_dict["highest_avail_line"] = self.arc_lines
-        #    #This is the same from the bottom
-        #    self.ui_dict["avail_bot_lines"] = self.arc_lines`
+        self.diff_draw = diff_draw
+        #This represents the current widget id being drawn
+        self.drawing_id = 0
         #Makes a grid of widget positions
         #This does not check if it is already been done because it NEEDS to be recalculated on resize
         if "ui_grid" not in self.ui_dict:
@@ -66,18 +59,6 @@ class window:
         
         #THIS IS FOR THE SWITCH TO LISTS FROM DICTIONARIES:
         self.winlist = [[self.bg_char] * self.arc_cols for _ in range(self.arc_lines)]
-        #for i in range(0, self.arc_lines):
-        #    self.winlist.append([])
-        #for i in range(0, self.arc_lines):
-        #    for c in range(0, self.arc_cols):
-        #        self.winlist[i].append(self.bg_char)
-
-        #This makes the nested dictionaries for the lines and cols of the window.
-        #for i in range(1, self.arc_lines + 1):
-        #    self.window_chars[i] = {}
-        #for i in self.window_chars:
-        #    for c in range(1, self.arc_cols + 1):
-        #        self.window_chars[i][c] = self.bg_char
         #This is a class text var, used in the input write method.
         self.str_text = strtxt
         #This is a state used to determine if the currently focused ui element needs to be unfocused bc esc has been pressed
@@ -114,32 +95,19 @@ class window:
                 self.screen.slist[i][c] = self.winlist[window_lines_index - 1][window_cols_index - 1]
                 window_cols_index += 1
             window_lines_index += 1
-
-        #for i in range(lines_start, lines_end + 1):
-        #    window_cols_index = 1
-        #    for c in range(cols_start, cols_end):
-        #        #print(f"I: {i} C: {c}")
-        #        #print(f"lstart: {lines_start} lend: {lines_end}, cstart {cols_start}, cend {cols_end} i: {i}, c: {c}")
-        #        self.screen.lines[i][c] = self.window_chars[window_lines_index][window_cols_index]
-        #        window_cols_index += 1
-        #    window_lines_index += 1
-
-        #Drawing Window Borders (DEPRICATED!!!!!!):
-        #if self.borders:
-        #    #First loop draws borders on top and bottom, second loop does sides and corners
-        #    for i in range(cols_start - 1, cols_end + 1):
-        #        self.screen.lines[(lines_start)][i] = self.screen.bordercol
-        #        self.screen.lines[(lines_end + 1)][i] = self.screen.bordercol
-        #        
-        #    for i in range(lines_start - 1, lines_end + 1):
-        #        self.screen.lines[i][(cols_start)] = self.screen.bordercol
-        #        self.screen.lines[i][(cols_end + 1)] = self.screen.bordercol
         #This updates the screen
-        if self.firstdraw:
-            self.screen.fulldraw()
-            self.firstdraw = False
+        if self.diff_draw:
+            if self.firstdraw:
+                self.screen.fulldraw()
+                self.firstdraw = False
+            else:
+                self.screen.newdraw()
         else:
-            self.screen.newdraw()
+            if self.firstdraw:
+                self.screen.fulldraw()
+                self.firstdraw = False
+            else:
+                self.screen.fulldraw()
     #This method allows text to be placed freely on the screen. It is NOT meant to be used independenty (NOT a ui widget). It is used by other methods.
     #Line is the line the text will be put on, col is the column it will start on.
     #text is the actual text to be written.
@@ -176,80 +144,59 @@ class window:
                     startline += 1
                     c = startcol
                 else:
-                    c += 1
-    def widget_place(self, align_vert, align_hor, colsize, linsize):
-        if align_vert == "center" and align_hor == "center":
-            #get middle column of widget:
-            #Size must be odd to be in perfect middle
-            middle_col = int(align_hor - ((align_hor - 1) / 2))
-            
-            
+                    c += 1     
 
     #This method does the same as the write method, but writes with user input
     #It captures user input until a app dev set keybinding activates
-    def add_inputbox(self, align_hor="center", align_vert="center"):
-        colsize = (hor_perc / 100) * self.arc_cols
-        line_size = (vert_perc / 100) * self.arc_lines
-        total_hor_pad = self.arc_cols - colsize
-        total_vert_pad = self.arc_lines - line_size
-        if align_hor == "center":
-            hor_pad = total_hor_pad / 2
-            vert_pad = total_vert_pad / 2
-            #startcol = self.ui_dict["
-            startcol = self.ui_dict[""]
-        elif align_hor == "left":
-            startcol = 1
-        #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
-        if endline == "max":
-            endline = self.sizelines
-        if endcol == "max":
-            endcol = self.sizecols
-    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", align_hor="center", align_vert="center", color="base_text", bg_color="base_win_bg", wrapping=True):
-        #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
-        if endline == "max":
-            endline = self.sizelines
-        if endcol == "max":
-            endcol = self.sizecols
-        #char_amount = ((endline - startline) + 1) * ((endcol - startcol) + 1)
-        #bufftxt = ""
-        #Assign the dict entry for this widget
+    def add_inputbox(self, grid_x, grid_y, color="base_text", bg_color="base_win_bg", wrapping=True):
         self.ui_dict[self.curr_id_num] = {}
-        self.ui_dict[self.curr_id_num]["type"] = "input_write"
-        self.ui_dict[self.curr_id_num]["hor_size"] = ((endcol - startcol) + 1)
-        self.ui_dict[self.curr_id_num]["vert_size"] = ((endline - startline) + 1)
-        if "txt" in self.ui_dict[self.curr_id_num]:
-            self.str_text = self.ui_dict[self.curr_id_num]
-        #for i in range(0, char_amount):
-        #    bufftxt += " "
-        #    self.write(bufftxt, startline, startcol, endline, endcol, color, bg_color, wrapping)
-        #self.draw_win()
+        self.ui_dict[self.curr_id_num]["type"] = "input_box"
+        self.ui_dict[self.curr_id_num]["grid_x"] = grid_x
+        self.ui_dict[self.curr_id_num]["grid_y"] = grid_y
+        #Lines, THEN Cols
+        self.ui_dict["ui_grid"][grid_y][grid_x] = 1
+        self.ui_dict[self.curr_id_num]["color"] = color
+        self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
+        self.ui_dict[self.curr_id_num]["wrapping"] = wrapping
+        self.ui_dict[self.curr_id_num]["txt"] = ""
 
+    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
+        #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
+        if endline == "max":
+            endline = self.sizelines
+        if endcol == "max":
+            endcol = self.sizecols
         self.need_unfocus_current = False
         
         while self.need_unfocus_current == False:
             res = self.screen.get_input()
             if res == "^BACKSPACE":
-                self.str_text = self.str_text[:-1]
-                self.str_text += " "
-                self.write(self.str_text, startline, startcol, endline, endcol, color, bg_color, wrapping)
-                self.str_text = self.str_text[:-1]
+                self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
+                self.ui_dict[self.drawing_id]["txt"] += " "
+                self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
+                self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
                 self.draw_win()
             elif res == "^ESCAPE":
                 self.need_unfocus_current = True
             else:
-                self.str_text = self.str_text[:-1]
-                self.str_text += res
-                self.str_text += "_"
-                self.write(self.str_text, startline, startcol, endline, endcol, color, bg_color, wrapping)
+                self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
+                self.ui_dict[self.drawing_id]["txt"] += res
+                self.ui_dict[self.drawing_id]["txt"] += "_"
+                self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
                 self.draw_win()
-            self.ui_dict[self.curr_id_num]["txt"] = self.str_text
-        ent_str = self.str_text[:-1]
-        self.str_text = ""
+        ent_str = self.ui_dict[self.drawing_id]["txt"][:-1]
         self.curr_id_num += 1
         return ent_str
-    def add_uispace(self, vert_perc, hor_perc):
-        self.ui_dict[self.curr_id_num] = {}
-        self.ui_dict[self.curr_id_num]["type"] = "ui_space"
-        self.ui_dict[self.curr_id_num]["vert_size"] = vert_perc
-        self.ui_dict[self.curr_id_num]["hor_size"] = hor_perc
-        self.curr_id_num += 1
+    
+    def ui_draw(self):
+        txt_to_return = ""
+        for i in self.ui_dict:
+            #Not skipping through this will cause an error
+            if i == "ui_grid":
+                continue
+            self.drawing_id = i
+
+            #INPUT BOX
+            if self.ui_dict[i]["type"] == "input_box":
+                txt_to_return = self.input_write()
+        return txt_to_return
