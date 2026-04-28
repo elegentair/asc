@@ -17,7 +17,13 @@ class window:
         self.ui_dict = uidict
         self.diff_draw = diff_draw
         #This represents the current widget id being drawn
-        self.drawing_id = 0
+        if "draw_id" not in self.ui_dict:
+            self.drawing_id = 0
+            #NOTE: This version of the drawing ID is not up to date with the current one EXCEPT when window is resized.
+            #It is updated in the resize function.
+            self.ui_dict["draw_id"] = 0
+        else:
+            self.drawing_id = self.ui_dict["draw_id"]
         #Makes a grid of widget positions
         #This does not check if it is already been done because it NEEDS to be recalculated on resize
         if "ui_grid" not in self.ui_dict:
@@ -66,6 +72,7 @@ class window:
     
     def resize_win(self):
         # This re-initializes the ui every time the user resizes the app. This is needed so that the app doesnt break when resized
+        self.ui_dict["draw_id"] = self.drawing_id
         self.screen.clear()
         self.resize += 1
         self.screen.__init__()
@@ -159,6 +166,7 @@ class window:
         self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
         self.ui_dict[self.curr_id_num]["wrapping"] = wrapping
         self.ui_dict[self.curr_id_num]["txt"] = ""
+        self.curr_id_num += 1
 
     def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
         #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
@@ -185,8 +193,67 @@ class window:
                 self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
                 self.draw_win()
         ent_str = self.ui_dict[self.drawing_id]["txt"][:-1]
-        self.curr_id_num += 1
+        #self.curr_id_num += 1
         return ent_str
+    
+    def get_pos(self, gridx, gridy):
+        #This function is the widget resizing engine for ASC
+        #Diagonals are not yet added here.
+        # "*_size" Vals are out of 5, will be turned into fractions later, and are not addable.
+        # They represent how many grid units can be added to each side, but do not account for the 1x1 size of the original grid position.
+        e_left = True
+        l_size = 0
+
+        r_size = 0
+        e_right = True
+
+        u_size = 0
+        e_up = True
+
+        d_size = 0
+        e_down = True
+
+        curr_left_extent = gridx
+        while e_left == True:
+            if curr_left_extent == 1:
+                e_left = False
+            elif self.ui_dict["ui_grid"][gridy][curr_left_extent - 1] == 0:
+                curr_left_extent -= 1
+                l_size += 1
+            else:
+                e_left = False
+        
+        curr_right_extent = gridx
+        while e_right == True:
+            if curr_right_extent == 5:
+                e_right = False
+            elif self.ui_dict["ui_grid"][gridy][curr_right_extent + 1] == 0:
+                curr_right_extent += 1
+                r_size += 1
+            else:
+                e_right = False
+
+        curr_up_extent = gridy
+        while e_up == True:
+            if curr_up_extent == 5:
+                e_up = False
+            elif self.ui_dict["ui_grid"][curr_up_extent + 1][gridx] == 0:
+                curr_up_extent += 1
+                u_size += 1
+            else:
+                e_up = False
+        
+        curr_down_extent = gridy
+        while e_down == True:
+            if curr_down_extent == 1:
+                e_down = False
+            elif self.ui_dict["ui_grid"][curr_down_extent - 1][gridx] == 0:
+                curr_down_extent -= 1
+                d_size += 1
+            else:
+                e_down = False
+        return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}")
+
     
     def ui_draw(self):
         txt_to_return = ""
@@ -194,9 +261,13 @@ class window:
             #Not skipping through this will cause an error
             if i == "ui_grid":
                 continue
+            if i == "draw_id":
+                continue
+
             self.drawing_id = i
 
             #INPUT BOX
             if self.ui_dict[i]["type"] == "input_box":
-                txt_to_return = self.input_write()
-        return txt_to_return
+                expe = self.get_pos(self.ui_dict[i]["grid_x"], self.ui_dict[i]["grid_y"])
+                txt_to_return = self.input_write(color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], wrapping=self.ui_dict[i]["wrapping"])
+        return txt_to_return, expe
