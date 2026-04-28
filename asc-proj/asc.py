@@ -26,15 +26,17 @@ class window:
             self.drawing_id = self.ui_dict["draw_id"]
         #Makes a grid of widget positions
         #This does not check if it is already been done because it NEEDS to be recalculated on resize
+        self.grid_mult = grid_mult
         if "ui_grid" not in self.ui_dict:
             self.ui_dict["ui_grid"] = {}
+            for i in range(1, ((grid_mult * 5) + 1)):
+                self.ui_dict["ui_grid"][i] = {}
+                for c in range(1, ((grid_mult * 5) + 1)):
+                    self.ui_dict["ui_grid"][i][c] = 0
 
-        self.grid_mult = grid_mult
-
-        for i in range(1, ((grid_mult * 5) + 1)):
-            self.ui_dict["ui_grid"][i] = {}
-            for c in range(1, ((grid_mult * 5) + 1)):
-                self.ui_dict["ui_grid"][i][c] = 0
+        if "ui_pos" not in self.ui_dict:
+            self.ui_dict["ui_pos"] = {}
+            #ADD MORE HERE
 
         #This is a number that is used to assign id nums to ui elements
         self.curr_id_num = 1
@@ -160,6 +162,9 @@ class window:
         self.ui_dict[self.curr_id_num]["type"] = "input_box"
         self.ui_dict[self.curr_id_num]["grid_x"] = grid_x
         self.ui_dict[self.curr_id_num]["grid_y"] = grid_y
+        #these sizes being zero means the widget engine has not determined their sizes yet
+        self.ui_dict[self.curr_id_num]["l_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_size"] = 0
         #Lines, THEN Cols
         self.ui_dict["ui_grid"][grid_y][grid_x] = 1
         self.ui_dict[self.curr_id_num]["color"] = color
@@ -213,8 +218,24 @@ class window:
         d_size = 0
         e_down = True
 
+        #top left
+        tl_size = 0
+        e_tl = True
+
+        #top right
+        tr_size = 0
+        e_tr = True
+
+        #bottom left
+        bl_size = 0
+        e_bl = True
+
+        #bottom right
+        br_size = 0
+        e_br = True 
+
         curr_left_extent = gridx
-        while e_left == True:
+        if e_left == True:
             if curr_left_extent == 1:
                 e_left = False
             elif self.ui_dict["ui_grid"][gridy][curr_left_extent - 1] == 0:
@@ -224,7 +245,7 @@ class window:
                 e_left = False
         
         curr_right_extent = gridx
-        while e_right == True:
+        if e_right == True:
             if curr_right_extent == 5:
                 e_right = False
             elif self.ui_dict["ui_grid"][gridy][curr_right_extent + 1] == 0:
@@ -234,7 +255,7 @@ class window:
                 e_right = False
 
         curr_up_extent = gridy
-        while e_up == True:
+        if e_up == True:
             if curr_up_extent == 5:
                 e_up = False
             elif self.ui_dict["ui_grid"][curr_up_extent + 1][gridx] == 0:
@@ -244,7 +265,7 @@ class window:
                 e_up = False
         
         curr_down_extent = gridy
-        while e_down == True:
+        if e_down == True:
             if curr_down_extent == 1:
                 e_down = False
             elif self.ui_dict["ui_grid"][curr_down_extent - 1][gridx] == 0:
@@ -252,7 +273,68 @@ class window:
                 d_size += 1
             else:
                 e_down = False
-        return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}")
+        
+        curr_left_extent = gridx
+        curr_right_extent = gridx
+        curr_up_extent = gridy
+        curr_down_extent = gridy
+
+        if e_tl == True:
+            if curr_up_extent == 5 or curr_left_extent == 1:
+                e_tl = False
+            elif self.ui_dict["ui_grid"][curr_up_extent + 1][curr_left_extent - 1] == 0:
+                curr_up_extent += 1
+                curr_left_extent -= 1
+                tl_size += 1
+            else:
+                e_tl = False
+
+        curr_left_extent = gridx
+        curr_right_extent = gridx
+        curr_up_extent = gridy
+        curr_down_extent = gridy
+
+        if e_tr == True:
+            if curr_up_extent == 5 or curr_right_extent == 5:
+                e_tr = False
+            elif self.ui_dict["ui_grid"][curr_up_extent + 1][curr_right_extent + 1] == 0:
+                curr_up_extent += 1
+                curr_right_extent += 1
+                tr_size += 1
+            else:
+                e_tr = False
+
+        curr_left_extent = gridx
+        curr_right_extent = gridx
+        curr_up_extent = gridy
+        curr_down_extent = gridy
+
+        if e_bl == True:
+            if curr_down_extent == 1 or curr_left_extent == 1:
+                e_bl = False
+            elif self.ui_dict["ui_grid"][curr_down_extent - 1][curr_left_extent - 1] == 0:
+                curr_down_extent -= 1
+                curr_left_extent -= 1
+                bl_size += 1
+            else:
+                e_bl = False
+
+        curr_left_extent = gridx
+        curr_right_extent = gridx
+        curr_up_extent = gridy
+        curr_down_extent = gridy
+
+        if e_br == True:
+            if curr_down_extent == 1 or curr_right_extent == 5:
+                e_br = False
+            elif self.ui_dict["ui_grid"][curr_down_extent - 1][curr_right_extent + 1] == 0:
+                curr_down_extent -= 1
+                curr_right_extent += 1
+                br_size += 1
+            else:
+                e_br = False
+        
+        return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")
 
     
     def ui_draw(self):
@@ -262,6 +344,8 @@ class window:
             if i == "ui_grid":
                 continue
             if i == "draw_id":
+                continue
+            if i == "ui_pos":
                 continue
 
             self.drawing_id = i
