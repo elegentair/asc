@@ -19,7 +19,7 @@ og_term = termios.tcgetattr(sys.stdin.fileno())
 #This function will run on quit of program
 def term_cleanup():
     termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, og_term)
-    sys.stdout.write("\033[?25h")
+    sys.stdout.write("\033[?25h\033[0m\033[0J")
     #sys.stdout.write("\033[H\033[2J")
     sys.stdout.flush()
 

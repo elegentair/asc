@@ -201,10 +201,13 @@ class window:
         #self.curr_id_num += 1
         return ent_str
     
-    def get_pos(self, gridx, gridy, id):
+    def get_pos(self, id):
+        #This function determines by how many grid steps a widget size can be extended.
+        #NOTE: For it to do this, it must be called in a loop until calling it with all widgets returns 1
+        gridx = self.ui_dict[id]["grid_x"]
+        gridy = self.ui_dict[id]["grid_y"]
         if id not in self.ui_dict["ui_pos"]:
             self.ui_dict["ui_pos"][id] = {}
-            #This function is the widget resizing engine for ASC
             #Diagonals are not yet added here.
             # "*_size" Vals are out of 5 (or grid_mult), will be turned into fractions later, and are not addable.
             # They represent how many grid units can be added to each side, but do not account for the 1x1 size of the original grid position.
@@ -387,11 +390,34 @@ class window:
         self.ui_dict["ui_pos"][id]["curr_br_right_extent"] = curr_br_right_extent
         self.ui_dict["ui_pos"][id]["curr_br_down_extent"] = curr_br_down_extent
         
-        return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")
+        if e_left == False and e_right == False and e_up == False and e_down == False and e_tl == False and e_tr == False and e_bl == False and e_br == False:
+            return 1
+        else:
+            return 0
+        #return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")
 
     
     def ui_draw(self):
         txt_to_return = ""
+        #If this is true, all widgets have had their positions calculated
+        all_wid_pos = False
+        num_widgets = 0
+        num_wid_done = 0
+        for i in self.ui_dict:
+            if i == "ui_grid" or i == "draw_id" or i == "ui_pos":
+                continue
+            num_widgets += 1
+        
+        while all_wid_pos == False:
+            for i in range(1, num_widgets + 1):
+                val = self.get_pos(i)
+                if val == 1:
+                    num_wid_done += 1
+                if num_wid_done == num_widgets:
+                    all_wid_pos = True
+            #After the loop, we are calculating the coordinates of the widgets based on the grid extensions calculated prior
+            
+
         for i in self.ui_dict:
             #Not skipping through this will cause an error
             if i == "ui_grid":
@@ -405,6 +431,5 @@ class window:
 
             #INPUT BOX
             if self.ui_dict[i]["type"] == "input_box":
-                expe = self.get_pos(self.ui_dict[i]["grid_x"], self.ui_dict[i]["grid_y"], i)
                 txt_to_return = self.input_write(color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], wrapping=self.ui_dict[i]["wrapping"])
-        return txt_to_return, expe
+        return txt_to_return
