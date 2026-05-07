@@ -1,11 +1,12 @@
 import time
 class window:
-    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = "", diff_draw=True):
+    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = "", diff_draw=True, dyn_size = False):
         self.firstdraw = True
         self.screen = screen_obj
         lines = self.screen.line_num
         cols = self.screen.col_num
         self.title = title
+        self.dyn_size = dyn_size
         self.resize = 0
         self.endmsg = ""
         #BORDERS ARE DEPRICATED FOR NOW
@@ -78,7 +79,7 @@ class window:
         self.screen.clear()
         self.resize += 1
         self.screen.__init__()
-        self.__init__(self.screen, self.title, self.bgchoice, self.bgcolor, self.grid_mult, self.borders, self.ui_dict, self.str_text)
+        self.__init__(self.screen, self.title, self.bgchoice, self.bgcolor, self.grid_mult, self.borders, self.ui_dict, self.str_text, self.diff_draw, self.dyn_size)
 
     def draw_win(self):
         self.screen.update_res()
@@ -166,7 +167,7 @@ class window:
         self.ui_dict[self.curr_id_num]["l_size"] = 0
         self.ui_dict[self.curr_id_num]["c_size"] = 0
         #Lines, THEN Cols
-        self.ui_dict["ui_grid"][grid_y][grid_x] = 1
+        self.ui_dict["ui_grid"][grid_y][grid_x] = self.curr_id_num
         self.ui_dict[self.curr_id_num]["color"] = color
         self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
         self.ui_dict[self.curr_id_num]["wrapping"] = wrapping
@@ -201,7 +202,7 @@ class window:
         #self.curr_id_num += 1
         return ent_str
     
-    def get_pos(self, id):
+    def get_dyn_pos(self, id):
         #This function determines by how many grid steps a widget size can be extended.
         #NOTE: For it to do this, it must be called in a loop until calling it with all widgets returns 1
         gridx = self.ui_dict[id]["grid_x"]
@@ -287,6 +288,7 @@ class window:
             if curr_left_extent == 1:
                 e_left = False
             elif self.ui_dict["ui_grid"][gridy][curr_left_extent - 1] == 0:
+                self.ui_dict["ui_grid"][gridy][curr_left_extent - 1] = id
                 curr_left_extent -= 1
                 l_size += 1
             else:
@@ -296,6 +298,7 @@ class window:
             if curr_right_extent == 5:
                 e_right = False
             elif self.ui_dict["ui_grid"][gridy][curr_right_extent + 1] == 0:
+                self.ui_dict["ui_grid"][gridy][curr_right_extent + 1] = id
                 curr_right_extent += 1
                 r_size += 1
             else:
@@ -305,6 +308,7 @@ class window:
             if curr_up_extent == 5:
                 e_up = False
             elif self.ui_dict["ui_grid"][curr_up_extent + 1][gridx] == 0:
+                self.ui_dict["ui_grid"][curr_up_extent + 1][gridx] = id
                 curr_up_extent += 1
                 u_size += 1
             else:
@@ -314,6 +318,7 @@ class window:
             if curr_down_extent == 1:
                 e_down = False
             elif self.ui_dict["ui_grid"][curr_down_extent - 1][gridx] == 0:
+                self.ui_dict["ui_grid"][curr_down_extent - 1][gridx] = id
                 curr_down_extent -= 1
                 d_size += 1
             else:
@@ -322,7 +327,8 @@ class window:
         if e_tl == True:
             if curr_tl_up_extent == 5 or curr_tl_left_extent == 1:
                 e_tl = False
-            elif self.ui_dict["ui_grid"][curr_tl_up_extent + 1][curr_tl_left_extent - 1] == 0:
+            elif self.ui_dict["ui_grid"][curr_tl_up_extent + 1][curr_tl_left_extent - 1] == 0 and self.ui_dict["ui_grid"][curr_tl_up_extent + 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_tl_left_extent - 1] == 0:
+                self.ui_dict["ui_grid"][curr_tl_up_extent + 1][curr_tl_left_extent - 1] = id
                 curr_tl_up_extent += 1
                 curr_tl_left_extent -= 1
                 tl_size += 1
@@ -332,7 +338,8 @@ class window:
         if e_tr == True:
             if curr_tr_up_extent == 5 or curr_tr_right_extent == 5:
                 e_tr = False
-            elif self.ui_dict["ui_grid"][curr_tr_up_extent + 1][curr_tr_right_extent + 1] == 0:
+            elif self.ui_dict["ui_grid"][curr_tr_up_extent + 1][curr_tr_right_extent + 1] == 0 and self.ui_dict["ui_grid"][curr_tr_up_extent + 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_tr_right_extent + 1] == 0:
+                self.ui_dict["ui_grid"][curr_tr_up_extent + 1][curr_tr_right_extent + 1] = id
                 curr_tr_up_extent += 1
                 curr_tr_right_extent += 1
                 tr_size += 1
@@ -342,7 +349,8 @@ class window:
         if e_bl == True:
             if curr_bl_down_extent == 1 or curr_bl_left_extent == 1:
                 e_bl = False
-            elif self.ui_dict["ui_grid"][curr_bl_down_extent - 1][curr_bl_left_extent - 1] == 0:
+            elif self.ui_dict["ui_grid"][curr_bl_down_extent - 1][curr_bl_left_extent - 1] == 0 and self.ui_dict["ui_grid"][curr_bl_down_extent - 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_bl_left_extent - 1] == 0:
+                self.ui_dict["ui_grid"][curr_bl_down_extent - 1][curr_bl_left_extent - 1] = id
                 curr_bl_down_extent -= 1
                 curr_bl_left_extent -= 1
                 bl_size += 1
@@ -352,7 +360,8 @@ class window:
         if e_br == True:
             if curr_br_down_extent == 1 or curr_br_right_extent == 5:
                 e_br = False
-            elif self.ui_dict["ui_grid"][curr_br_down_extent - 1][curr_br_right_extent + 1] == 0:
+            elif self.ui_dict["ui_grid"][curr_br_down_extent - 1][curr_br_right_extent + 1] == 0 and self.ui_dict["ui_grid"][curr_br_down_extent - 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_br_right_extent + 1] == 0:
+                self.ui_dict["ui_grid"][curr_br_down_extent - 1][curr_br_right_extent + 1] = id
                 curr_br_down_extent -= 1
                 curr_br_right_extent += 1
                 br_size += 1
@@ -396,6 +405,8 @@ class window:
             return 0
         #return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")
 
+    def get_pos(self, id):
+        print("TEST")
     
     def ui_draw(self):
         txt_to_return = ""
@@ -407,16 +418,40 @@ class window:
             if i == "ui_grid" or i == "draw_id" or i == "ui_pos":
                 continue
             num_widgets += 1
-        
-        while all_wid_pos == False:
-            for i in range(1, num_widgets + 1):
-                val = self.get_pos(i)
-                if val == 1:
-                    num_wid_done += 1
-                if num_wid_done == num_widgets:
-                    all_wid_pos = True
+        if self.dyn_size:
+            #This is code for dynamic resizing (WIP)
+            while all_wid_pos == False:
+                for i in range(1, num_widgets + 1):
+                    val = self.get_pos(i)
+                    if val == 1:
+                        num_wid_done += 1
+                    if num_wid_done == num_widgets:
+                        all_wid_pos = True
             #After the loop, we are calculating the coordinates of the widgets based on the grid extensions calculated prior
-            
+
+            #Here, we calculate the cols and lines of each grid box
+            #NOTE: Put exact coords in ui dict for each widget, so that final loop doesnt have to be rewritten
+            wid = int(self.arc_cols/self.grid_mult)
+            wrem = self.arc_cols%self.grid_mult
+
+            lin = int(self.arc_lines/self.grid_mult)
+            lrem = self.arc_lines%self.grid_mult
+
+            for i in self.ui_dict:
+                if i == "ui_grid" or i == "draw_id" or i == "ui_pos":
+                    continue
+                self.ui_dict[i]["l_size"] = lin * (self.ui_dict["ui_pos"][i]["u_size"])
+                self.ui_dict[i]["c_size"] = wid
+                if lrem > 0:
+                    self.ui_dict[i]["l_size"] += 1
+                    lrem -= 1
+                if wrem > 0:
+                    self.ui_dict[i]["c_size"] += 1
+                    wrem -= 1
+        else:
+            #NON DYNAMIC RESIZING:
+            print("HI")
+
 
         for i in self.ui_dict:
             #Not skipping through this will cause an error
