@@ -250,3 +250,4 @@ class screen:
         else:
             char = inp
         return char
+    

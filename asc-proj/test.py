@@ -3,10 +3,10 @@ import asc
 import asc_screen
 scn = asc_screen.screen()
 win = asc.window(scn, "demo")
-win.add_inputbox(3, 3, 2, 2, bg_color="blue")
-#win.add_inputbox(1, 1, 1, 1, bg_color="red")
-#win.add_inputbox(1, 2)
-recalc, text_in = win.ui_draw()
+win.add_inputbox(3, 3, 1, 1, bg_color="blue")
+win.add_inputbox(1, 1, 1, 1, bg_color="red")
+win.add_text_box("hello", 5, 5, 0, 0)
+text_in = win.ui_draw_static()
 print(f"You wrote: {text_in}")
 
 debug = True
@@ -33,4 +33,4 @@ if debug:
     print(end_col)
     print(l_size)
     print(c_size)
-print(recalc)
+#print(recalc)

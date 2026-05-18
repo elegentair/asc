@@ -3,12 +3,12 @@ class window:
     def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 5, borders=False, uidict={}, strtxt = "", diff_draw=True, dyn_size = False, initn=True):
         self.firstdraw = True
         self.screen = screen_obj
-        self.ui_needs_init = initn
+        self.ui_needs_init = True
         self.need_recalc = False
         lines = self.screen.line_num
         cols = self.screen.col_num
         self.title = title
-        self.dyn_size = dyn_size
+        self.dyn_size = False
         self.resize = 0
         self.endmsg = ""
         #BORDERS ARE DEPRICATED FOR NOW
@@ -237,210 +237,42 @@ class window:
             ent_str = self.ui_dict[self.drawing_id]["txt"][:-1]
             #self.curr_id_num += 1
             return ent_str
+        
     
-    def get_dyn_pos(self, id):
+    def add_text_box(self, text, grid_x, grid_y, l_size = 0, c_size = 0, color="base_text", bg_color="base_win_bg", wrapping=True):
+        self.ui_dict[self.curr_id_num] = {}
+        self.ui_dict[self.curr_id_num]["type"] = "text_box"
+        #if not using dyn sizing, this is the top left corner of grid widget
+        self.ui_dict[self.curr_id_num]["grid_x"] = grid_x
+        self.ui_dict[self.curr_id_num]["grid_y"] = grid_y
+        #if not using dynamic resizing, these are the grid unit sizes of widgets:
+        self.ui_dict[self.curr_id_num]["c_ext"] = c_size + 1
+        self.ui_dict[self.curr_id_num]["l_ext"] = l_size + 1
+        #these sizes being zero means the widget engine has not determined their sizes yet
+        self.ui_dict[self.curr_id_num]["l_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_tl"] = 0
+        self.ui_dict[self.curr_id_num]["l_tl"] = 0
+        #Lines, THEN Cols
+        self.ui_dict["ui_grid"][grid_y][grid_x] = self.curr_id_num
+        self.ui_dict[self.curr_id_num]["color"] = color
+        self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
+        self.ui_dict[self.curr_id_num]["wrapping"] = wrapping
+        self.ui_dict[self.curr_id_num]["text"] = text
+        #WIDGET SIZING
+        for i in range(grid_y, (l_size + grid_y + 1)):
+            for c in range(grid_x, (c_size + grid_x + 1)):
+                self.ui_dict["ui_grid"][i][c] = self.curr_id_num
 
-        #This function determines by how many grid steps a widget size can be extended.
-        #NOTE: For it to do this, it must be called in a loop until calling it with all widgets returns 1
-        gridx = self.ui_dict[id]["grid_x"]
-        gridy = self.ui_dict[id]["grid_y"]
-        if id not in self.ui_dict["ui_pos"]:
-            self.ui_dict["ui_pos"][id] = {}
-            #Diagonals are not yet added here.
-            # "*_size" Vals are out of 5 (or grid_mult), will be turned into fractions later, and are not addable.
-            # They represent how many grid units can be added to each side, but do not account for the 1x1 size of the original grid position.
-            e_left = True
-            l_size = 0
+        self.curr_id_num += 1
 
-            r_size = 0
-            e_right = True
 
-            u_size = 0
-            e_up = True
-
-            d_size = 0
-            e_down = True
-
-            #top left
-            tl_size = 0
-            e_tl = True
-
-            #top right
-            tr_size = 0
-            e_tr = True
-
-            #bottom left
-            bl_size = 0
-            e_bl = True
-
-            #bottom right
-            br_size = 0
-            e_br = True 
-
-            curr_left_extent = gridx
-            curr_right_extent = gridx
-            curr_up_extent = gridy
-            curr_down_extent = gridy
-            curr_tl_left_extent = gridx
-            curr_tl_up_extent = gridy
-            curr_tr_right_extent = gridx
-            curr_tr_up_extent = gridy
-            curr_bl_left_extent = gridx
-            curr_bl_down_extent = gridy
-            curr_br_right_extent = gridx
-            curr_br_down_extent = gridy
-        else:
-            e_up = self.ui_dict["ui_pos"][id]["e_up"]
-            e_down = self.ui_dict["ui_pos"][id]["e_down"]
-            e_left = self.ui_dict["ui_pos"][id]["e_left"]
-            e_right = self.ui_dict["ui_pos"][id]["e_right"]
-            e_tl = self.ui_dict["ui_pos"][id]["e_tl"]
-            e_tr = self.ui_dict["ui_pos"][id]["e_tr"]
-            e_bl = self.ui_dict["ui_pos"][id]["e_bl"]
-            e_br = self.ui_dict["ui_pos"][id]["e_br"]
-
-            u_size = self.ui_dict["ui_pos"][id]["u_size"]
-            d_size = self.ui_dict["ui_pos"][id]["d_size"]
-            l_size = self.ui_dict["ui_pos"][id]["l_size"]
-            r_size = self.ui_dict["ui_pos"][id]["r_size"]
-            tl_size = self.ui_dict["ui_pos"][id]["tl_size"]
-            tr_size = self.ui_dict["ui_pos"][id]["tr_size"]
-            bl_size = self.ui_dict["ui_pos"][id]["bl_size"]
-            br_size = self.ui_dict["ui_pos"][id]["br_size"]
-
-            curr_left_extent = self.ui_dict["ui_pos"][id]["curr_left_extent"]
-            curr_right_extent = self.ui_dict["ui_pos"][id]["curr_right_extent"]
-            curr_up_extent = self.ui_dict["ui_pos"][id]["curr_up_extent"]
-            curr_down_extent = self.ui_dict["ui_pos"][id]["curr_down_extent"]
-            curr_tl_up_extent = self.ui_dict["ui_pos"][id]["curr_tl_up_extent"]
-            curr_tl_left_extent = self.ui_dict["ui_pos"][id]["curr_tl_left_extent"]
-            curr_tr_right_extent = self.ui_dict["ui_pos"][id]["curr_tr_right_extent"]
-            curr_tr_up_extent = self.ui_dict["ui_pos"][id]["curr_tr_up_extent"]
-            curr_bl_left_extent = self.ui_dict["ui_pos"][id]["curr_bl_left_extent"]
-            curr_bl_down_extent = self.ui_dict["ui_pos"][id]["curr_bl_down_extent"]
-            curr_br_right_extent = self.ui_dict["ui_pos"][id]["curr_br_right_extent"]
-            curr_br_down_extent = self.ui_dict["ui_pos"][id]["curr_br_down_extent"]
-
-        if e_left == True:
-            if curr_left_extent == 1:
-                e_left = False
-            elif self.ui_dict["ui_grid"][gridy][curr_left_extent - 1] == 0:
-                self.ui_dict["ui_grid"][gridy][curr_left_extent - 1] = id
-                curr_left_extent -= 1
-                l_size += 1
-            else:
-                e_left = False
-        
-        if e_right == True:
-            if curr_right_extent == 5:
-                e_right = False
-            elif self.ui_dict["ui_grid"][gridy][curr_right_extent + 1] == 0:
-                self.ui_dict["ui_grid"][gridy][curr_right_extent + 1] = id
-                curr_right_extent += 1
-                r_size += 1
-            else:
-                e_right = False
-
-        if e_up == True:
-            if curr_up_extent == 5:
-                e_up = False
-            elif self.ui_dict["ui_grid"][curr_up_extent + 1][gridx] == 0:
-                self.ui_dict["ui_grid"][curr_up_extent + 1][gridx] = id
-                curr_up_extent += 1
-                u_size += 1
-            else:
-                e_up = False
-        
-        if e_down == True:
-            if curr_down_extent == 1:
-                e_down = False
-            elif self.ui_dict["ui_grid"][curr_down_extent - 1][gridx] == 0:
-                self.ui_dict["ui_grid"][curr_down_extent - 1][gridx] = id
-                curr_down_extent -= 1
-                d_size += 1
-            else:
-                e_down = False
-
-        if e_tl == True:
-            if curr_tl_up_extent == 5 or curr_tl_left_extent == 1:
-                e_tl = False
-            elif self.ui_dict["ui_grid"][curr_tl_up_extent + 1][curr_tl_left_extent - 1] == 0 and self.ui_dict["ui_grid"][curr_tl_up_extent + 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_tl_left_extent - 1] == 0:
-                self.ui_dict["ui_grid"][curr_tl_up_extent + 1][curr_tl_left_extent - 1] = id
-                curr_tl_up_extent += 1
-                curr_tl_left_extent -= 1
-                tl_size += 1
-            else:
-                e_tl = False
-
-        if e_tr == True:
-            if curr_tr_up_extent == 5 or curr_tr_right_extent == 5:
-                e_tr = False
-            elif self.ui_dict["ui_grid"][curr_tr_up_extent + 1][curr_tr_right_extent + 1] == 0 and self.ui_dict["ui_grid"][curr_tr_up_extent + 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_tr_right_extent + 1] == 0:
-                self.ui_dict["ui_grid"][curr_tr_up_extent + 1][curr_tr_right_extent + 1] = id
-                curr_tr_up_extent += 1
-                curr_tr_right_extent += 1
-                tr_size += 1
-            else:
-                e_tr = False
-
-        if e_bl == True:
-            if curr_bl_down_extent == 1 or curr_bl_left_extent == 1:
-                e_bl = False
-            elif self.ui_dict["ui_grid"][curr_bl_down_extent - 1][curr_bl_left_extent - 1] == 0 and self.ui_dict["ui_grid"][curr_bl_down_extent - 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_bl_left_extent - 1] == 0:
-                self.ui_dict["ui_grid"][curr_bl_down_extent - 1][curr_bl_left_extent - 1] = id
-                curr_bl_down_extent -= 1
-                curr_bl_left_extent -= 1
-                bl_size += 1
-            else:
-                e_bl = False
-
-        if e_br == True:
-            if curr_br_down_extent == 1 or curr_br_right_extent == 5:
-                e_br = False
-            elif self.ui_dict["ui_grid"][curr_br_down_extent - 1][curr_br_right_extent + 1] == 0 and self.ui_dict["ui_grid"][curr_br_down_extent - 1][gridx] == 0 and self.ui_dict["ui_grid"][gridy][curr_br_right_extent + 1] == 0:
-                self.ui_dict["ui_grid"][curr_br_down_extent - 1][curr_br_right_extent + 1] = id
-                curr_br_down_extent -= 1
-                curr_br_right_extent += 1
-                br_size += 1
-            else:
-                e_br = False
-
-        self.ui_dict["ui_pos"][id]["e_up"] = e_up
-        self.ui_dict["ui_pos"][id]["e_down"] = e_down
-        self.ui_dict["ui_pos"][id]["e_left"] = e_left
-        self.ui_dict["ui_pos"][id]["e_right"] = e_right
-        self.ui_dict["ui_pos"][id]["e_tl"] = e_tl
-        self.ui_dict["ui_pos"][id]["e_tr"] = e_tr
-        self.ui_dict["ui_pos"][id]["e_bl"] = e_bl
-        self.ui_dict["ui_pos"][id]["e_br"] = e_br
-
-        self.ui_dict["ui_pos"][id]["u_size"] = u_size
-        self.ui_dict["ui_pos"][id]["d_size"] = d_size
-        self.ui_dict["ui_pos"][id]["l_size"] = l_size
-        self.ui_dict["ui_pos"][id]["r_size"] = r_size
-        self.ui_dict["ui_pos"][id]["tl_size"] = tl_size
-        self.ui_dict["ui_pos"][id]["tr_size"] = tr_size
-        self.ui_dict["ui_pos"][id]["bl_size"] = bl_size
-        self.ui_dict["ui_pos"][id]["br_size"] = br_size
-
-        self.ui_dict["ui_pos"][id]["curr_left_extent"] = curr_left_extent
-        self.ui_dict["ui_pos"][id]["curr_right_extent"] = curr_right_extent
-        self.ui_dict["ui_pos"][id]["curr_up_extent"] = curr_up_extent
-        self.ui_dict["ui_pos"][id]["curr_down_extent"] = curr_down_extent
-        self.ui_dict["ui_pos"][id]["curr_tl_up_extent"] = curr_tl_up_extent
-        self.ui_dict["ui_pos"][id]["curr_tl_left_extent"] = curr_tl_left_extent
-        self.ui_dict["ui_pos"][id]["curr_tr_right_extent"] = curr_tr_right_extent
-        self.ui_dict["ui_pos"][id]["curr_tr_up_extent"] = curr_tr_up_extent
-        self.ui_dict["ui_pos"][id]["curr_bl_left_extent"] = curr_bl_left_extent
-        self.ui_dict["ui_pos"][id]["curr_bl_down_extent"] = curr_bl_down_extent
-        self.ui_dict["ui_pos"][id]["curr_br_right_extent"] = curr_br_right_extent
-        self.ui_dict["ui_pos"][id]["curr_br_down_extent"] = curr_br_down_extent
-        
-        if e_left == False and e_right == False and e_up == False and e_down == False and e_tl == False and e_tr == False and e_bl == False and e_br == False:
-            return 1
-        else:
-            return 0
-        #return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")    
+    def text_box(self, id, startline=1, startcol=1, endline="max", endcol="max"):
+        color = self.ui_dict[id]["color"]
+        bg_color = self.ui_dict[id]["bg_color"]
+        wrapping = self.ui_dict[id]["wrapping"]
+        text = self.ui_dict[id]["text"]
+        self.write(text, startline, startcol, endline, endcol, color, bg_color, wrapping)
     
     def get_pos(self):
         all_wid_pos = False
@@ -588,6 +420,7 @@ class window:
                 continue
             if i == "ui_grid_sizes":
                 continue
+            self.drawing_id = i
             if i == 1:
                 start_line = 1
                 start_col = 1
@@ -603,3 +436,81 @@ class window:
                 start_col = 41
                 end_line = 24
                 end_col = 80
+
+            if self.ui_dict[i]["type"] == "input_box":
+                self.input_write(startcol=start_col, startline=start_line, endcol=end_col, endline=end_line, color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], init=True, firstinit=True, wrapping=self.ui_dict[i]["wrapping"])
+            elif self.ui_dict[i]["type"] == "text_box":
+                self.text_box(i, start_line, start_col, end_line, end_col)
+        
+        for i in self.ui_dict:
+            alpha_dict = {
+                "a": 1,
+                "b": 2,
+                "c": 3,
+                "d": 4,
+                "e": 5,
+                "f": 6,
+                "g": 7,
+                "h": 8,
+                "i": 9,
+                "j": 10,
+                "k": 11,
+                "l": 12,
+                "m": 13,
+                "n": 14,
+                "o": 15,
+                "p": 16,
+                "q": 17,
+                "r": 18,
+                "s": 19,
+                "t": 20,
+                "u": 21,
+                "v": 22,
+                "w": 23,
+                "x": 24,
+                "y": 25,
+                "z": 26
+            }
+        
+        while self.need_unfocus_current == False:
+            chc = ""
+            while chc != "^ENTER":
+                chc = self.screen.get_input()
+                if chc == "^ENTER":
+                    break
+                elif chc in alpha_dict:
+                    wid_in = alpha_dict[chc]
+                else: 
+                    continue
+            
+            for i in self.ui_dict:
+                if i == "ui_grid":
+                    continue
+                if i == "draw_id":
+                    continue
+                if i == "ui_pos":
+                    continue
+                if i == "ui_grid_sizes":
+                    continue
+                self.drawing_id = i
+                if i == 1:
+                    start_line = 1
+                    start_col = 1
+                    end_line = 24
+                    end_col = 40
+                if i == 2:
+                    start_line = 1
+                    start_col = 41
+                    end_line = 12
+                    end_col = 80
+                if i == 3:
+                    start_line = 13
+                    start_col = 41
+                    end_line = 24
+                    end_col = 80
+                if i == wid_in:
+                    if self.ui_dict[i]["type"] == "input_box":
+                        txt_to_return = self.input_write(startcol=start_col, startline=start_line, endcol=end_col, endline=end_line, color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], wrapping=self.ui_dict[i]["wrapping"])
+
+        return txt_to_return
+            
