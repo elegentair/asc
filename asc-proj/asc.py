@@ -494,19 +494,19 @@ class window:
                 wid_cols_size = 0
                 tl_gridx = self.ui_dict[d]["grid_x"]
                 tl_gridy = self.ui_dict[d]["grid_y"]
-                for i in self.ui_dict["ui_grid"]:
+                for i in range(1, tl_gridy + 1):
                     if i == self.ui_dict[d]["grid_y"]:
                         break
-                    tl_lines += self.ui_dict["ui_grid_sizes"][i][c]["lines"]
-                for i in self.ui_dict["ui_grid"][1]:
+                    tl_lines += self.ui_dict["ui_grid_sizes"][i][tl_gridx]["lines"]
+                for i in range(1, tl_gridx + 1):
                     if i == self.ui_dict[d]["grid_x"]:
                         break
-                    tl_cols += self.ui_dict["ui_grid_sizes"][i][c]["cols"]
+                    tl_cols += self.ui_dict["ui_grid_sizes"][tl_gridy][i]["cols"]
                 #now, calculating the length and width of the widget
-                for i in range(tl_gridx, tl_gridx + self.ui_dict[d]["l_ext"]):
+                for i in range(tl_gridy, tl_gridy + self.ui_dict[d]["l_ext"]):
                     print(tl_gridy)
                     wid_line_size += self.ui_dict["ui_grid_sizes"][i][tl_gridy]["lines"]
-                for i in range(tl_gridy, tl_gridy + self.ui_dict[d]["c_ext"]):
+                for i in range(tl_gridx, tl_gridx + self.ui_dict[d]["c_ext"]):
                     wid_cols_size += self.ui_dict["ui_grid_sizes"][tl_gridx][i]["cols"]
                 self.ui_dict[d]["c_tl"] = tl_cols
                 self.ui_dict[d]["l_tl"] = tl_lines
@@ -538,7 +538,7 @@ class window:
                     #need start line, start col, end line, and end col
                     start_line = self.ui_dict[i]["l_tl"]
                     start_col = self.ui_dict[i]["c_tl"]
-                    end_line = self.ui_dict[i]["l_tl"] + self.ui_dict[i]["l_size"]
+                    end_line = (self.ui_dict[i]["l_tl"] + self.ui_dict[i]["l_size"]) - 1
                     end_col = (self.ui_dict[i]["c_tl"] + self.ui_dict[i]["c_size"]) - 1
                     print("dim")
                     print(start_line)
@@ -567,8 +567,8 @@ class window:
                 #need start line, start col, end line, and end col
                 start_line = self.ui_dict[i]["l_tl"]
                 start_col = self.ui_dict[i]["c_tl"]
-                end_line = self.ui_dict[i]["l_tl"] + self.ui_dict[i]["l_size"]
-                end_col = self.ui_dict[i]["c_tl"] + self.ui_dict[i]["c_size"]
+                end_line = (self.ui_dict[i]["l_tl"] + self.ui_dict[i]["l_size"]) - 1
+                end_col = (self.ui_dict[i]["c_tl"] + self.ui_dict[i]["c_size"]) - 1
 
                 #INPUT BOX
                 if self.ui_dict[i]["type"] == "input_box":
@@ -577,3 +577,29 @@ class window:
                     recalc = True
 
         return did_size, txt_to_return
+    
+    def ui_draw_static(self):
+        for i in self.ui_dict:
+            if i == "ui_grid":
+                continue
+            if i == "draw_id":
+                continue
+            if i == "ui_pos":
+                continue
+            if i == "ui_grid_sizes":
+                continue
+            if i == 1:
+                start_line = 1
+                start_col = 1
+                end_line = 24
+                end_col = 40
+            if i == 2:
+                start_line = 1
+                start_col = 41
+                end_line = 12
+                end_col = 80
+            if i == 3:
+                start_line = 13
+                start_col = 41
+                end_line = 24
+                end_col = 80

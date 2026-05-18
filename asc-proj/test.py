@@ -4,18 +4,19 @@ import asc_screen
 scn = asc_screen.screen()
 win = asc.window(scn, "demo")
 win.add_inputbox(3, 3, 2, 2, bg_color="blue")
+#win.add_inputbox(1, 1, 1, 1, bg_color="red")
 #win.add_inputbox(1, 2)
 recalc, text_in = win.ui_draw()
 print(f"You wrote: {text_in}")
 
-debug = False
+debug = True
 
 #FOR DEBUGGING
 if debug:
     st = ""
-    for i in win.ui_dict["ui_grid_sizes"]:
-        for c in win.ui_dict["ui_grid_sizes"][i]:
-            st += str(win.ui_dict["ui_grid_sizes"][i][c])
+    for i in win.ui_dict["ui_grid"]:
+        for c in win.ui_dict["ui_grid"][i]:
+            st += str(win.ui_dict["ui_grid"][i][c])
             st += " "
         print(st)
         st = ""
