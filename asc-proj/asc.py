@@ -1,6 +1,6 @@
 import time
 class window:
-    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 1, borders=False, uidict={}, strtxt = "", diff_draw=True, dyn_size = False):
+    def __init__(self, screen_obj, title="Window", bg=" ", bg_color = "base_bg", grid_mult = 5, borders=False, uidict={}, strtxt = "", diff_draw=True, dyn_size = False):
         self.firstdraw = True
         self.screen = screen_obj
         lines = self.screen.line_num
@@ -30,14 +30,20 @@ class window:
         self.grid_mult = grid_mult
         if "ui_grid" not in self.ui_dict:
             self.ui_dict["ui_grid"] = {}
-            for i in range(1, ((grid_mult * 5) + 1)):
+            for i in range(1, ((grid_mult) + 1)):
                 self.ui_dict["ui_grid"][i] = {}
-                for c in range(1, ((grid_mult * 5) + 1)):
+                for c in range(1, ((grid_mult) + 1)):
                     self.ui_dict["ui_grid"][i][c] = 0
 
         if "ui_pos" not in self.ui_dict:
             self.ui_dict["ui_pos"] = {}
             #ADD MORE HERE
+        if "ui_grid_sizes" not in self.ui_dict:
+            self.ui_dict["ui_grid_sizes"] = {}
+            for i in range(1, ((grid_mult) + 1)):
+                self.ui_dict["ui_grid_sizes"][i] = {}
+                for c in range(1, ((grid_mult) + 1)):
+                    self.ui_dict["ui_grid_sizes"][i][c] = {}
 
         #This is a number that is used to assign id nums to ui elements
         self.curr_id_num = 1
@@ -123,7 +129,7 @@ class window:
     #text is the actual text to be written.
     #Color is the text color, the wrapping setting controls if the text is wrapping or not.
     #The bg var is the background color of the text
-    def write(self, text, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
+    def write(self, text, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True, focus_force=False):
         #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
         if endline == "max":
             endline = self.sizelines
@@ -149,8 +155,9 @@ class window:
             #This auto pushes the text to the next line if it overtakes the first line & wrapping is on
             elif wrapping == True:
                 if startline >= self.sizelines and c >= endcol:
-                    self.need_unfocus_current = True
-                elif c >= self.sizecols or c >= endcol:
+                    if not focus_force:
+                        self.need_unfocus_current = True
+                if c >= self.sizecols or c >= endcol:
                     startline += 1
                     c = startcol
                 else:
@@ -158,51 +165,73 @@ class window:
 
     #This method does the same as the write method, but writes with user input
     #It captures user input until a app dev set keybinding activates
-    def add_inputbox(self, grid_x, grid_y, color="base_text", bg_color="base_win_bg", wrapping=True):
+    def add_inputbox(self, grid_x, grid_y, l_size = 0, c_size = 0, color="base_text", bg_color="base_win_bg", wrapping=True):
         self.ui_dict[self.curr_id_num] = {}
         self.ui_dict[self.curr_id_num]["type"] = "input_box"
+        #if not using dyn sizing, this is the top left corner of grid widget
         self.ui_dict[self.curr_id_num]["grid_x"] = grid_x
         self.ui_dict[self.curr_id_num]["grid_y"] = grid_y
+        #if not using dynamic resizing, these are the grid unit sizes of widgets:
+        self.ui_dict[self.curr_id_num]["c_ext"] = c_size + 1
+        self.ui_dict[self.curr_id_num]["l_ext"] = l_size + 1
         #these sizes being zero means the widget engine has not determined their sizes yet
         self.ui_dict[self.curr_id_num]["l_size"] = 0
         self.ui_dict[self.curr_id_num]["c_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_tl"] = 0
+        self.ui_dict[self.curr_id_num]["l_tl"] = 0
         #Lines, THEN Cols
         self.ui_dict["ui_grid"][grid_y][grid_x] = self.curr_id_num
         self.ui_dict[self.curr_id_num]["color"] = color
         self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
         self.ui_dict[self.curr_id_num]["wrapping"] = wrapping
         self.ui_dict[self.curr_id_num]["txt"] = ""
+        #WIDGET SIZING
+        for i in range(grid_y, (l_size + grid_y + 1)):
+            for c in range(grid_x, (c_size + grid_x + 1)):
+                self.ui_dict["ui_grid"][i][c] = self.curr_id_num
+
         self.curr_id_num += 1
 
-    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", wrapping=True):
+    def input_write(self, startline=1, startcol=1, endline="max", endcol="max", color="base_text", bg_color="base_win_bg", init=False, wrapping=True):
         #If endline and endcol are "max", the text will use all lines (besides starting) and all cols (besides starting)
         if endline == "max":
             endline = self.sizelines
         if endcol == "max":
             endcol = self.sizecols
         self.need_unfocus_current = False
-        
-        while self.need_unfocus_current == False:
-            res = self.screen.get_input()
-            if res == "^BACKSPACE":
-                self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
-                self.ui_dict[self.drawing_id]["txt"] += " "
-                self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
-                self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
-                self.draw_win()
-            elif res == "^ESCAPE":
-                self.need_unfocus_current = True
-            else:
-                self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
-                self.ui_dict[self.drawing_id]["txt"] += res
-                self.ui_dict[self.drawing_id]["txt"] += "_"
-                self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
-                self.draw_win()
-        ent_str = self.ui_dict[self.drawing_id]["txt"][:-1]
-        #self.curr_id_num += 1
-        return ent_str
+        space_txt = ""
+        for i in range(startline, endline + 1):
+            for c in range(startcol, endcol + 1):
+                space_txt += " "
+                self.write(space_txt, startline, startcol, endline, endcol, color, bg_color, wrapping, focus_force=True)
+        self.ui_dict[self.drawing_id]["txt"] += "_"
+        self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
+        self.draw_win()
+        if not init:
+            while self.need_unfocus_current == False:
+                res = self.screen.get_input()
+                #if res == "":
+                #    continue
+                if res == "^BACKSPACE":
+                    self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
+                    self.ui_dict[self.drawing_id]["txt"] += " "
+                    self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
+                    self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
+                    self.draw_win()
+                elif res == "^ESCAPE":
+                    self.need_unfocus_current = True
+                else:
+                    self.ui_dict[self.drawing_id]["txt"] = self.ui_dict[self.drawing_id]["txt"][:-1]
+                    self.ui_dict[self.drawing_id]["txt"] += res
+                    self.ui_dict[self.drawing_id]["txt"] += "_"
+                    self.write(self.ui_dict[self.drawing_id]["txt"], startline, startcol, endline, endcol, color, bg_color, wrapping)
+                    self.draw_win()
+            ent_str = self.ui_dict[self.drawing_id]["txt"][:-1]
+            #self.curr_id_num += 1
+            return ent_str
     
     def get_dyn_pos(self, id):
+
         #This function determines by how many grid steps a widget size can be extended.
         #NOTE: For it to do this, it must be called in a loop until calling it with all widgets returns 1
         gridx = self.ui_dict[id]["grid_x"]
@@ -403,10 +432,7 @@ class window:
             return 1
         else:
             return 0
-        #return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")
-
-    def get_pos(self, id):
-        print("TEST")
+        #return (f"UP: {u_size} DOWN: {d_size} LEFT: {l_size} RIGHT: {r_size}, TL: {tl_size}, TR: {tr_size}, BL: {bl_size}, BR: {br_size}")    
     
     def ui_draw(self):
         txt_to_return = ""
@@ -415,43 +441,91 @@ class window:
         num_widgets = 0
         num_wid_done = 0
         for i in self.ui_dict:
-            if i == "ui_grid" or i == "draw_id" or i == "ui_pos":
+            if i == "ui_grid" or i == "draw_id" or i == "ui_pos" or i == "ui_grid_sizes":
                 continue
             num_widgets += 1
         if self.dyn_size:
             #This is code for dynamic resizing (WIP)
             while all_wid_pos == False:
                 for i in range(1, num_widgets + 1):
-                    val = self.get_pos(i)
+                    val = self.get_dyn_pos(i)
                     if val == 1:
                         num_wid_done += 1
                     if num_wid_done == num_widgets:
                         all_wid_pos = True
             #After the loop, we are calculating the coordinates of the widgets based on the grid extensions calculated prior
-
             #Here, we calculate the cols and lines of each grid box
             #NOTE: Put exact coords in ui dict for each widget, so that final loop doesnt have to be rewritten
             wid = int(self.arc_cols/self.grid_mult)
             wrem = self.arc_cols%self.grid_mult
-
             lin = int(self.arc_lines/self.grid_mult)
             lrem = self.arc_lines%self.grid_mult
-
-            for i in self.ui_dict:
-                if i == "ui_grid" or i == "draw_id" or i == "ui_pos":
-                    continue
-                self.ui_dict[i]["l_size"] = lin * (self.ui_dict["ui_pos"][i]["u_size"])
-                self.ui_dict[i]["c_size"] = wid
-                if lrem > 0:
-                    self.ui_dict[i]["l_size"] += 1
-                    lrem -= 1
-                if wrem > 0:
-                    self.ui_dict[i]["c_size"] += 1
-                    wrem -= 1
         else:
-            #NON DYNAMIC RESIZING:
-            print("HI")
+            #calculate the width and height of each grid space:
+            for i in self.ui_dict["ui_grid_sizes"]:
+                for c in self.ui_dict["ui_grid_sizes"][i]:
+                    endc = round(c * (self.arc_cols / self.grid_mult))
+                    stc = round((c - 1) * (self.arc_cols / self.grid_mult))
+                    endl = round(i * (self.arc_lines / self.grid_mult))
+                    stl = round((i - 1) * (self.arc_lines / self.grid_mult))
+                    self.ui_dict["ui_grid_sizes"][i][c]["lines"] = endl - stl
+                    self.ui_dict["ui_grid_sizes"][i][c]["cols"] = endc - stc
+            st = ""
+            for i in self.ui_dict["ui_grid_sizes"]:
+                for c in self.ui_dict["ui_grid_sizes"][i]:
+                    st += str(self.ui_dict["ui_grid_sizes"][i][c])
+                    st += " "
+                print(st)
+                st = ""
+            for d in self.ui_dict:
+                if d == "ui_grid" or d == "draw_id" or d == "ui_pos" or d == "ui_grid_sizes":
+                    continue
+                tl_lines = 0
+                tl_cols = 0
+                wid_line_size = 0
+                wid_cols_size = 0
+                tl_gridx = self.ui_dict[d]["grid_x"]
+                tl_gridy = self.ui_dict[d]["grid_y"]
+                for i in self.ui_dict["ui_grid"]:
+                    if i == self.ui_dict[d]["grid_y"]:
+                        break
+                    tl_lines += self.ui_dict["ui_grid_sizes"][i][c]["lines"]
+                for i in self.ui_dict["ui_grid"][1]:
+                    if i == self.ui_dict[d]["grid_x"]:
+                        break
+                    tl_cols += self.ui_dict["ui_grid_sizes"][i][c]["cols"]
+                #now, calculating the length and width of the widget
+                for i in range(tl_gridx, tl_gridx + self.ui_dict[d]["l_ext"]):
+                    print(tl_gridy)
+                    wid_line_size += self.ui_dict["ui_grid_sizes"][i][tl_gridy]["lines"]
+                for i in range(tl_gridy, tl_gridy + self.ui_dict[d]["c_ext"]):
+                    wid_cols_size += self.ui_dict["ui_grid_sizes"][tl_gridx][i]["cols"]
+                self.ui_dict[d]["c_tl"] = tl_cols
+                self.ui_dict[d]["l_tl"] = tl_lines
+                self.ui_dict[d]["c_size"] = wid_cols_size
+                self.ui_dict[d]["l_size"] = wid_line_size
+        #initial widget states:
+        for i in self.ui_dict:
+            #Not skipping through this will cause an error
+            if i == "ui_grid":
+                continue
+            if i == "draw_id":
+                continue
+            if i == "ui_pos":
+                continue
+            if i == "ui_grid_sizes":
+                continue
 
+            self.drawing_id = i
+            
+            #need start line, start col, end line, and end col
+            start_line = self.ui_dict[i]["l_tl"]
+            start_col = self.ui_dict[i]["c_tl"]
+            end_line = self.ui_dict[i]["l_tl"] + self.ui_dict[i]["l_size"]
+            end_col = self.ui_dict[i]["c_tl"] + self.ui_dict[i]["c_size"]
+
+            if self.ui_dict[i]["type"] == "input_box":
+                self.input_write(startcol=start_col, startline=start_line, endcol=end_col, endline=end_line, color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], init=True, wrapping=self.ui_dict[i]["wrapping"])
 
         for i in self.ui_dict:
             #Not skipping through this will cause an error
@@ -461,10 +535,18 @@ class window:
                 continue
             if i == "ui_pos":
                 continue
+            if i == "ui_grid_sizes":
+                continue
 
             self.drawing_id = i
+            
+            #need start line, start col, end line, and end col
+            start_line = self.ui_dict[i]["l_tl"]
+            start_col = self.ui_dict[i]["c_tl"]
+            end_line = self.ui_dict[i]["l_tl"] + self.ui_dict[i]["l_size"]
+            end_col = self.ui_dict[i]["c_tl"] + self.ui_dict[i]["c_size"]
 
             #INPUT BOX
             if self.ui_dict[i]["type"] == "input_box":
-                txt_to_return = self.input_write(color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], wrapping=self.ui_dict[i]["wrapping"])
+                txt_to_return = self.input_write(startcol=start_col, startline=start_line, endcol=end_col, endline=end_line, color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], wrapping=self.ui_dict[i]["wrapping"])
         return txt_to_return

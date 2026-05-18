@@ -12,6 +12,8 @@ import sys
 # Used for input:
 import termios
 
+import time
+
 import copy
 # Get original terminal settings:
 og_term = termios.tcgetattr(sys.stdin.fileno())
@@ -50,7 +52,7 @@ class screen:
         term_to_modify[3] &= ~termios.ISIG
         term_to_modify[0] &= ~termios.IXON
         term_to_modify[6][termios.VMIN] = 0
-        term_to_modify[6][termios.VTIME] = 1
+        term_to_modify[6][termios.VTIME] = 0
         termios.tcsetattr(ter, termios.TCSADRAIN, term_to_modify)
         
         self.slist_old = []
@@ -216,12 +218,25 @@ class screen:
     
     def get_input(self):
         inp = sys.stdin.read(1)
+        #if inp == "\x1b":
+        #time.sleep(0.02)
+        if not inp:
+            return ""
+        
         if inp == "\x1b":
-            inp += sys.stdin.read(2)
-        if inp == "\x7f":
+            time.sleep(0.02)
+            while True:
+                rem = sys.stdin.read(1)
+                if rem:
+                    inp += rem
+                else:
+                    break
+        if inp == "\x1b":
+            return "^ESCAPE"
+        elif inp == "\x7f":
             char = "^BACKSPACE"
-        elif inp == "\x1b":
-            char = "^ESCAPE"
+        #elif inp == "\x1b":
+            #char = "^ESCAPE"
         elif inp == "\x1b[A":
             char = "^UP_ARROW"
         elif inp == "\x1b[B":
