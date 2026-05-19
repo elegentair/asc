@@ -273,6 +273,94 @@ class window:
         wrapping = self.ui_dict[id]["wrapping"]
         text = self.ui_dict[id]["text"]
         self.write(text, startline, startcol, endline, endcol, color, bg_color, wrapping)
+        self.draw_win()
+
+    def add_button(self, text, func, grid_x, grid_y, l_size=0, c_size=0, color="base_text", bg_color="base_win_bg"):
+        self.ui_dict[self.curr_id_num] = {}
+        self.ui_dict[self.curr_id_num]["type"] = "button"
+        #if not using dyn sizing, this is the top left corner of grid widget
+        self.ui_dict[self.curr_id_num]["grid_x"] = grid_x
+        self.ui_dict[self.curr_id_num]["grid_y"] = grid_y
+        #if not using dynamic resizing, these are the grid unit sizes of widgets:
+        self.ui_dict[self.curr_id_num]["c_ext"] = c_size + 1
+        self.ui_dict[self.curr_id_num]["l_ext"] = l_size + 1
+        #these sizes being zero means the widget engine has not determined their sizes yet
+        self.ui_dict[self.curr_id_num]["l_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_tl"] = 0
+        self.ui_dict[self.curr_id_num]["l_tl"] = 0
+        #Lines, THEN Cols
+        self.ui_dict["ui_grid"][grid_y][grid_x] = self.curr_id_num
+        self.ui_dict[self.curr_id_num]["color"] = color
+        self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
+        self.ui_dict[self.curr_id_num]["function"] = func
+        self.ui_dict[self.curr_id_num]["text"] = text
+        #WIDGET SIZING
+        for i in range(grid_y, (l_size + grid_y + 1)):
+            for c in range(grid_x, (c_size + grid_x + 1)):
+                self.ui_dict["ui_grid"][i][c] = self.curr_id_num
+
+        self.curr_id_num += 1
+
+    def button(self, id, startline=1, startcol=1, endline="max", endcol="max", init=False):
+        color = self.ui_dict[id]["color"]
+        bg_color = self.ui_dict[id]["bg_color"]
+        text = self.ui_dict[id]["text"]
+        func = self.ui_dict[id]["function"]
+        if init:
+            self.write(text, startline, startcol, endline, endcol, color, bg_color, True)
+            self.draw_win()
+        else:
+            func()
+    
+    def add_table(self, dicti, grid_x, grid_y, l_size=0, c_size=0, color="base_text", bg_color="base_win_bg"):
+        self.ui_dict[self.curr_id_num] = {}
+        self.ui_dict[self.curr_id_num]["type"] = "table"
+        #if not using dyn sizing, this is the top left corner of grid widget
+        self.ui_dict[self.curr_id_num]["grid_x"] = grid_x
+        self.ui_dict[self.curr_id_num]["grid_y"] = grid_y
+        #if not using dynamic resizing, these are the grid unit sizes of widgets:
+        self.ui_dict[self.curr_id_num]["c_ext"] = c_size + 1
+        self.ui_dict[self.curr_id_num]["l_ext"] = l_size + 1
+        #these sizes being zero means the widget engine has not determined their sizes yet
+        self.ui_dict[self.curr_id_num]["l_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_size"] = 0
+        self.ui_dict[self.curr_id_num]["c_tl"] = 0
+        self.ui_dict[self.curr_id_num]["l_tl"] = 0
+        #Lines, THEN Cols
+        self.ui_dict["ui_grid"][grid_y][grid_x] = self.curr_id_num
+        self.ui_dict[self.curr_id_num]["color"] = color
+        self.ui_dict[self.curr_id_num]["bg_color"] = bg_color
+        self.ui_dict[self.curr_id_num]["dict"] = dicti
+        #WIDGET SIZING
+        for i in range(grid_y, (l_size + grid_y + 1)):
+            for c in range(grid_x, (c_size + grid_x + 1)):
+                self.ui_dict["ui_grid"][i][c] = self.curr_id_num
+
+        self.curr_id_num += 1
+    
+    def table(self, id, startline=1, startcol=1, endline="max", endcol="max", init=False):
+        color = self.ui_dict[id]["color"]
+        bg_color = self.ui_dict[id]["bg_color"]
+        dicti = self.ui_dict[id]["dict"]
+        if init:
+            c = 0
+            i = 0
+            while c < len(dicti):
+                strw = "| " + str(dicti[c]) + " | " + str(dicti[c + 1]) + " |"
+                stlen = len(strw)
+                self.write(strw, startline + i, startcol, endline, endcol, color, bg_color, False)
+                self.draw_win()
+                if c == 0:
+                    i += 1
+                    strw = ""
+                    for d in range(0, stlen):
+                        strw += "_"
+                    self.write(strw, startline + i, startcol, endline, endcol, color, bg_color, False)
+                    self.draw_win()
+                strw = ""
+                c += 2
+                i += 1
     
     def get_pos(self):
         all_wid_pos = False
@@ -429,10 +517,15 @@ class window:
             if i == 2:
                 start_line = 1
                 start_col = 41
-                end_line = 12
+                end_line = 3
                 end_col = 80
             if i == 3:
-                start_line = 13
+                start_line = 4
+                start_col = 41
+                end_line = 6
+                end_col = 80
+            if i == 4:
+                start_line = 7
                 start_col = 41
                 end_line = 24
                 end_col = 80
@@ -441,6 +534,10 @@ class window:
                 self.input_write(startcol=start_col, startline=start_line, endcol=end_col, endline=end_line, color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], init=True, firstinit=True, wrapping=self.ui_dict[i]["wrapping"])
             elif self.ui_dict[i]["type"] == "text_box":
                 self.text_box(i, start_line, start_col, end_line, end_col)
+            elif self.ui_dict[i]["type"] == "button":
+                self.button(i, start_line, start_col, end_line, end_col, True)
+            elif self.ui_dict[i]["type"] == "table":
+                self.table(i, start_line, start_col, end_line, end_col, True)
         
         for i in self.ui_dict:
             alpha_dict = {
@@ -501,16 +598,25 @@ class window:
                 if i == 2:
                     start_line = 1
                     start_col = 41
-                    end_line = 12
+                    end_line = 3
                     end_col = 80
                 if i == 3:
-                    start_line = 13
+                    start_line = 4
+                    start_col = 41
+                    end_line = 6
+                    end_col = 80
+                if i == 4:
+                    start_line = 7
                     start_col = 41
                     end_line = 24
                     end_col = 80
                 if i == wid_in:
                     if self.ui_dict[i]["type"] == "input_box":
                         txt_to_return = self.input_write(startcol=start_col, startline=start_line, endcol=end_col, endline=end_line, color=self.ui_dict[i]["color"], bg_color=self.ui_dict[i]["bg_color"], wrapping=self.ui_dict[i]["wrapping"])
+                    elif self.ui_dict[i]["type"] == "button":
+                        self.button(i, start_line, start_col, end_line, end_col, False)
+                    elif self.ui_dict[i]["type"] == "table":
+                        self.table(i, start_line, start_col, end_line, end_col, True)
 
         return txt_to_return
             
