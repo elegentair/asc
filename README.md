@@ -1,6 +1,8 @@
 # asc
 A (future) TUI tookit to run anywhere!  
 
+To run: Clone the repo (or start a codespace), cd into the asc-proj/ directory, and run the test.py file (NOT asc_test.py). This is a test app built using the toolkit.  
+
 This is an in-progress TUI (text user interface) toolkit project! Currently, it is at a very elementry stage, only being able to run a window with a few text input or text box widgets in a static layout.
 
 The goal for this project is to have apps written in the toolkit run on any platform (including platforms other than desktop terminals). As such, its defining feature is the seperation between software specific tools (i.e, escape charecters, setting cbreak mode, stdin) and the main toolkit code. This allows (in the future) cross platform compatibility. To add a platform, all one has to do is rewrite the screen class (asc_screen.py) to use inpout & output commands for that specifc platform.  
@@ -26,6 +28,8 @@ Optional Simple Window Borders (Depricated)
 Window resizing (automatic) to terminal size  
 Partial activator input system  
 Make text input windows application readable  
+Table Widgets  
+Button Widgets  
 
 *Windows Support is not currently planned, as this library uses termios to manipulate terminal properties. Such support could and may be easily added in the future by editing the screen class*     
 
