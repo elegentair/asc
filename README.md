@@ -3,6 +3,8 @@ A (future) TUI tookit to run anywhere!
 
 To run: Clone the repo (or start a codespace), cd into the asc-proj/ directory, and run the test.py file (NOT asc_test.py). This is a test app built using the toolkit.  
 
+NOTE: This has only been tested on Linux, and will only work on Unix-Like systems (like codespaces). Windows support is NOT included, and Mac OS support has NOT been tested.     
+
 Video for final project: https://drive.google.com/file/d/1zvQINansYhDN2KjedIPARxXg9me_KJEs/view?usp=sharing
 
 This is an in-progress TUI (text user interface) toolkit project! Currently, it is at a very elementry stage, only being able to run a window with a few text input or text box widgets in a static layout.
